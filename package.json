@@ -1,7 +1,7 @@
 {
   "name": "@agentcommunity/cli",
   "version": "0.1.0",
-  "description": "Official read-only command-line client for Agent Community",
+  "description": "Official command-line client for Agent Community public data and user-claimed authorization",
   "type": "module",
   "bin": {
     "agentcommunity": "./dist/cli.js"

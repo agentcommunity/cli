@@ -15,6 +15,25 @@ export interface HttpTransport {
   requestJson<T>(request: JsonRequest<T>): Promise<T>;
 }
 
+export interface AuthHttpRequest {
+  method: "GET" | "POST";
+  url: string;
+  timeoutMs: number;
+  maxBytes: number;
+  headers: Record<string, string>;
+  body?: string;
+}
+
+export interface AuthHttpResponse {
+  status: number;
+  headers: Record<string, string>;
+  body: Uint8Array;
+}
+
+export interface AuthHttpTransport {
+  requestAuth(request: AuthHttpRequest): Promise<AuthHttpResponse>;
+}
+
 const MAX_RETRY_AFTER_MS = 300_000;
 
 function retryAfterDetails(value: string | null, now: number): Record<string, unknown> | undefined {
@@ -63,11 +82,53 @@ async function readBounded(response: Response, maxBytes: number): Promise<Uint8A
   return bytes;
 }
 
-export class HttpClient implements HttpTransport {
+export class HttpClient implements HttpTransport, AuthHttpTransport {
   constructor(
     private readonly fetchImpl: typeof fetch = fetch,
     private readonly now: () => number = Date.now,
   ) {}
+
+  async requestAuth(request: AuthHttpRequest): Promise<AuthHttpResponse> {
+    let url: URL;
+    try {
+      url = new URL(request.url);
+    } catch {
+      throw new CliError("unsafe_auth_endpoint", "The authorization endpoint is not allowed.", 5);
+    }
+    if (
+      url.protocol !== "https:"
+      || url.origin !== AGENT_COMMUNITY_ORIGIN
+      || url.username !== ""
+      || url.password !== ""
+      || url.hash !== ""
+    ) {
+      throw new CliError("unsafe_auth_endpoint", "The authorization endpoint is not allowed.", 5);
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), request.timeoutMs);
+    try {
+      const init: RequestInit = {
+        method: request.method,
+        headers: request.headers,
+        redirect: "manual",
+        signal: controller.signal,
+      };
+      if (request.body !== undefined) init.body = request.body;
+      const response = await this.fetchImpl(url.href, init);
+      const body = await readBounded(response, request.maxBytes);
+      const headers: Record<string, string> = {};
+      response.headers.forEach((value, name) => { headers[name.toLowerCase()] = value; });
+      return { status: response.status, headers, body };
+    } catch (error) {
+      if (error instanceof CliError) throw error;
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw new CliError("timeout", "The request timed out.", 6);
+      }
+      throw new CliError("network_error", "The Agent Community service could not be reached.", 6);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   async requestJson<T>(request: JsonRequest<T>): Promise<T> {
     if (!request.path.startsWith("/") || request.path.startsWith("//")) {

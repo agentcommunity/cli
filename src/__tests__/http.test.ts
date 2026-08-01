@@ -7,6 +7,37 @@ function response(body: string, init: ResponseInit = {}) {
 }
 
 describe("bounded HTTP transport", () => {
+  test("auth transport accepts only fixed-origin HTTPS URLs and returns bounded raw statuses", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response("challenge", {
+      status: 401,
+      headers: { "WWW-Authenticate": "Bearer resource_metadata=\"fixture\"", "X-Ignored": "value" },
+    }));
+    const client = new HttpClient(fetchImpl);
+    const result = await client.requestAuth({
+      method: "GET",
+      url: "https://agentcommunity.org/api",
+      timeoutMs: 1_000,
+      maxBytes: 100,
+      headers: { Accept: "application/json" },
+    });
+    expect(result).toEqual({
+      status: 401,
+      headers: {
+        "content-type": "text/plain;charset=UTF-8",
+        "www-authenticate": "Bearer resource_metadata=\"fixture\"",
+        "x-ignored": "value",
+      },
+      body: new Uint8Array(Buffer.from("challenge")),
+    });
+    expect(fetchImpl).toHaveBeenCalledWith("https://agentcommunity.org/api", expect.objectContaining({ redirect: "manual", method: "GET" }));
+
+    for (const url of ["http://agentcommunity.org/api", "https://evil.example/api", "https://user@agentcommunity.org/api"] ) {
+      await expect(client.requestAuth({ method: "GET", url, timeoutMs: 1_000, maxBytes: 100, headers: {} }))
+        .rejects.toMatchObject({ exitCode: 5, code: "unsafe_auth_endpoint" });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   test("uses the fixed production origin, manual redirects, JSON headers, and no extra request", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(response('{"ok":true}'));
     const client = new HttpClient(fetchImpl);

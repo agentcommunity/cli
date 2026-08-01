@@ -29,4 +29,10 @@ describe("package and CI boundaries", () => {
     expect(workflow).not.toContain("id-token: write");
     await expect(readFile(new URL(".github/workflows/release.yml", root), "utf8")).rejects.toThrow();
   });
+
+  test("the packed-tarball audit smoke checks both root and auth help", async () => {
+    const audit = await readFile(new URL("scripts/audit-package.ts", root), "utf8");
+    expect(audit).toContain('["--no-install", "agentcommunity", "--help"]');
+    expect(audit).toContain('["--no-install", "agentcommunity", "auth", "--help"]');
+  });
 });

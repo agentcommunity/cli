@@ -7,7 +7,12 @@ function harness(overrides: Partial<CliDependencies> = {}) {
   let stderr = "";
   const dependencies: CliDependencies = {
     http: { requestJson: vi.fn() },
+    authHttp: { requestAuth: vi.fn() },
     mcp: { callTool: vi.fn() },
+    credentials: { read: vi.fn(), write: vi.fn(), replace: vi.fn(), remove: vi.fn() },
+    monotonicNow: () => 0,
+    wallNow: () => 0,
+    sleep: vi.fn(),
     readFile: vi.fn(),
     readStdin: vi.fn(),
     stdout: (value) => { stdout += value; },
@@ -157,7 +162,7 @@ describe("the seven read-only commands", () => {
   test("help and local usage have no hidden network or telemetry request", async () => {
     const helpHarness = harness();
     expect(await runCli(["--help"], helpHarness.dependencies)).toBe(0);
-    expect(helpHarness.output().stdout).toContain("Agent Community read-only CLI");
+    expect(helpHarness.output().stdout).toContain("Agent Community CLI");
     expect(helpHarness.dependencies.http.requestJson).not.toHaveBeenCalled();
     expect(helpHarness.dependencies.mcp.callTool).not.toHaveBeenCalled();
   });

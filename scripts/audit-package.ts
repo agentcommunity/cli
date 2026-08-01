@@ -55,8 +55,13 @@ async function main(): Promise<void> {
     command("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarballPath], project);
     const smoke = spawnSync("npx", ["--no-install", "agentcommunity", "--help"], { cwd: project, encoding: "utf8", maxBuffer: 1024 * 1024 });
     const help = `${smoke.stdout}${smoke.stderr}`;
-    if (smoke.status !== 0 || !help.includes("Agent Community read-only CLI") || !help.includes("agentcommunity batch <file|->")) throw new Error(`Clean-install binary help smoke failed. Output:\n${help}`);
-    process.stdout.write(`${JSON.stringify({ filename: result.filename, sha256: tarballSha256, files: result.files, clean_install_help: "passed" }, null, 2)}\n`);
+    if (smoke.status !== 0 || !help.includes("Agent Community CLI") || !help.includes("agentcommunity batch <file|->") || !help.includes("agentcommunity auth <login|status|logout|revoke>")) throw new Error(`Clean-install binary help smoke failed. Output:\n${help}`);
+    const authSmoke = spawnSync("npx", ["--no-install", "agentcommunity", "auth", "--help"], { cwd: project, encoding: "utf8", maxBuffer: 1024 * 1024 });
+    const authHelp = `${authSmoke.stdout}${authSmoke.stderr}`;
+    if (authSmoke.status !== 0 || !authHelp.includes("auth login --login-hint <email>") || !authHelp.includes("auth revoke")) {
+      throw new Error(`Clean-install binary auth-help smoke failed. Output:\n${authHelp}`);
+    }
+    process.stdout.write(`${JSON.stringify({ filename: result.filename, sha256: tarballSha256, files: result.files, clean_install_help: "passed", clean_install_auth_help: "passed" }, null, 2)}\n`);
   } finally {
     await rm(destination, { recursive: true, force: true });
     await rm(project, { recursive: true, force: true });

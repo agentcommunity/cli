@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { open, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
 import { pathToFileURL } from "node:url";
 
+import { PosixCredentialStore } from "./auth/credential-store.js";
+import { AUTH_SCOPES } from "./auth/discovery.js";
+import { normalizeLoginHint, normalizeRequestedScopes } from "./auth/device-flow.js";
+import { runAuthLogin, runAuthLogout, runAuthRevoke, runAuthStatus, type CredentialStore } from "./commands/auth.js";
 import { runBatch } from "./commands/batch.js";
 import { runContent, type ContentOptions } from "./commands/content.js";
 import { runDocsAsk } from "./commands/docs.js";
@@ -10,14 +15,19 @@ import { runStats } from "./commands/stats.js";
 import { runVerify } from "./commands/verify.js";
 import { BATCH_INPUT_MAX_BYTES, parseTimeout } from "./config.js";
 import { CliError, type ExitCode, usageError } from "./errors.js";
-import { HttpClient, type HttpTransport } from "./http.js";
+import { HttpClient, type AuthHttpTransport, type HttpTransport } from "./http.js";
 import { McpClient, type McpTransport } from "./mcp.js";
 
 export const CLI_VERSION = "0.1.0";
 
 export interface CliDependencies {
   http: HttpTransport;
+  authHttp: AuthHttpTransport;
   mcp: McpTransport;
+  credentials: CredentialStore;
+  monotonicNow(): number;
+  wallNow(): number;
+  sleep(milliseconds: number): Promise<void>;
   readFile(path: string, maxBytes?: number): Promise<Uint8Array>;
   readStdin(maxBytes?: number): Promise<Uint8Array>;
   stdout(value: string): void;
@@ -27,6 +37,7 @@ export interface CliDependencies {
 interface GlobalOptions {
   json: boolean;
   timeoutMs: number;
+  timeoutSpecified: boolean;
   args: Array<string>;
 }
 
@@ -36,7 +47,7 @@ interface CommandResult {
   exitCode: ExitCode;
 }
 
-const HELP = `Agent Community read-only CLI
+const HELP = `Agent Community CLI
 
 Usage:
   agentcommunity stats [--json] [--timeout <ms>]
@@ -46,10 +57,24 @@ Usage:
   agentcommunity content search <query> [--type docs|blog|page] [--limit 1..50] [--cursor opaque] [--json] [--timeout <ms>]
   agentcommunity docs ask <query> [--top-k 1..10] [--json] [--timeout <ms>]
   agentcommunity batch <file|-> [--json] [--timeout <ms>]
+  agentcommunity auth <login|status|logout|revoke> [options]
 
 Exit codes: 0 success, 2 usage/input, 3 not found/ambiguous/not issued,
-4 reserved for auth, 5 protocol/contract, 6 timeout/unavailable,
+4 auth/credential safety, 5 protocol/contract, 6 timeout/unavailable,
 7 rate limited, 8 mixed batch result.
+`;
+
+const AUTH_HELP = `Agent Community user-claimed authorization
+
+Usage:
+  agentcommunity auth login --login-hint <email> [--scope <scope>...] [--json] [--timeout <ms>]
+  agentcommunity auth status [--json] [--timeout <ms>]
+  agentcommunity auth logout [--json]
+  agentcommunity auth revoke [--json] [--timeout <ms>]
+
+Supported scopes: agent.account.read, agent.registrations.read.
+auth logout removes only the local credential. auth revoke asks the server to
+process revocation of the current access token, then removes matching local state.
 `;
 
 function parseGlobals(argv: Array<string>): GlobalOptions {
@@ -70,7 +95,7 @@ function parseGlobals(argv: Array<string>): GlobalOptions {
       args.push(argument);
     }
   }
-  return { json, timeoutMs: parseTimeout(timeoutValue), args };
+  return { json, timeoutMs: parseTimeout(timeoutValue), timeoutSpecified: timeoutValue !== undefined, args };
 }
 
 function parseNamedOptions(args: Array<string>, allowed: ReadonlySet<string>): { positional: Array<string>; options: Record<string, string> } {
@@ -94,6 +119,31 @@ function parseNamedOptions(args: Array<string>, allowed: ReadonlySet<string>): {
 
 function exactly(args: Array<string>, count: number, usage: string): void {
   if (args.length !== count) throw usageError("invalid_usage", usage);
+}
+
+function parseAuthLoginOptions(args: Array<string>): { loginHint: string; scopes: Array<(typeof AUTH_SCOPES)[number]> } {
+  let loginHint: string | undefined;
+  const scopes: Array<string> = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument !== "--login-hint" && argument !== "--scope") {
+      throw usageError("unknown_option", `Unknown auth login option: ${argument ?? ""}`);
+    }
+    const value = args[index + 1];
+    if (value === undefined || value.startsWith("--")) throw usageError("missing_option_value", `${argument} requires a value.`);
+    if (argument === "--login-hint") {
+      if (loginHint !== undefined) throw usageError("duplicate_option", "--login-hint may be specified only once.");
+      loginHint = value;
+    } else {
+      scopes.push(value);
+    }
+    index += 1;
+  }
+  if (loginHint === undefined) throw usageError("missing_login_hint", "auth login requires --login-hint <email>.");
+  return {
+    loginHint: normalizeLoginHint(loginHint),
+    scopes: normalizeRequestedScopes(scopes.length === 0 ? [...AUTH_SCOPES] : scopes),
+  };
 }
 
 async function dispatch(options: GlobalOptions, dependencies: CliDependencies): Promise<CommandResult | null> {
@@ -150,14 +200,51 @@ async function dispatch(options: GlobalOptions, dependencies: CliDependencies): 
     }
     return runBatch(dependencies.http, bytes, options.timeoutMs);
   }
+  if (command === "auth") {
+    const [subcommand, ...authArgs] = rest;
+    if (subcommand === undefined || subcommand === "--help" || subcommand === "-h" || subcommand === "help") {
+      dependencies.stdout(AUTH_HELP);
+      return null;
+    }
+    if (subcommand === "login") {
+      const parsed = parseAuthLoginOptions(authArgs);
+      return runAuthLogin({
+        http: dependencies.authHttp,
+        store: dependencies.credentials,
+        timeoutMs: options.timeoutMs,
+        loginHint: parsed.loginHint,
+        requestedScopes: parsed.scopes,
+        monotonicNow: dependencies.monotonicNow,
+        wallNow: dependencies.wallNow,
+        sleep: dependencies.sleep,
+        presentVerification: ({ verificationUri, userCode }) => {
+          dependencies.stderr(options.json
+            ? `${JSON.stringify({ event: "verification_required", verification_uri: verificationUri, user_code: userCode })}\n`
+            : `Open ${verificationUri}\nEnter code ${userCode}\n`);
+        },
+      });
+    }
+    exactly(authArgs, 0, `Usage: agentcommunity auth ${subcommand}`);
+    if (subcommand === "status") return runAuthStatus({ http: dependencies.authHttp, store: dependencies.credentials, timeoutMs: options.timeoutMs, wallNow: dependencies.wallNow });
+    if (subcommand === "logout") {
+      if (options.timeoutSpecified) throw usageError("unknown_option", "auth logout does not accept --timeout because it makes no remote request.");
+      return runAuthLogout(dependencies.credentials);
+    }
+    if (subcommand === "revoke") return runAuthRevoke({ http: dependencies.authHttp, store: dependencies.credentials, timeoutMs: options.timeoutMs });
+    throw usageError("unknown_auth_command", `Unknown auth command: ${subcommand}`);
+  }
   throw usageError("unknown_command", `Unknown command: ${command}`);
 }
 
 function errorEnvelope(error: CliError): string {
+  const containsSensitiveValue = /(?:\b(?:access|claim|refresh)?[_ -]?token\b|assertion|claim_attempt|verification[_ -]?uri|\b\d{6}\b|\baca_[A-Za-z0-9_-]+\b|\bclm_[A-Za-z0-9_-]+\b)/i.test(error.message);
   const body: { error: { code: string; message: string; details?: Record<string, unknown> } } = {
-    error: { code: error.code, message: error.message },
+    error: { code: error.code, message: containsSensitiveValue ? "The operation failed without exposing sensitive details." : error.message },
   };
-  if (error.details !== undefined) body.error.details = error.details;
+  const retryAfter = error.details?.retry_after_ms;
+  if (typeof retryAfter === "number" && Number.isSafeInteger(retryAfter) && retryAfter >= 0) {
+    body.error.details = { retry_after_ms: retryAfter };
+  }
   return `${JSON.stringify(body)}\n`;
 }
 
@@ -203,9 +290,22 @@ async function readLimitedStdin(maxBytes = BATCH_INPUT_MAX_BYTES): Promise<Uint8
 function defaultDependencies(): CliDependencies {
   const http = new HttpClient();
   const mcp = new McpClient(http, randomUUID, CLI_VERSION);
+  const uid = process.getuid?.();
+  const credentials = new PosixCredentialStore({
+    platform: process.platform,
+    homeDirectory: homedir(),
+    ...(process.env.XDG_CONFIG_HOME === undefined ? {} : { xdgConfigHome: process.env.XDG_CONFIG_HOME }),
+    uid: uid ?? -1,
+    processId: process.pid,
+  });
   return {
     http,
+    authHttp: http,
     mcp,
+    credentials,
+    monotonicNow: () => performance.now(),
+    wallNow: Date.now,
+    sleep: (milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)),
     readFile: readLimitedFile,
     readStdin: readLimitedStdin,
     stdout: (value) => { process.stdout.write(value); },
