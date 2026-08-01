@@ -14,15 +14,18 @@ export async function runBatch(http: HttpTransport, bytes: Uint8Array, timeoutMs
   const parsed = batchRequestSchema.safeParse(raw);
   if (!parsed.success) {
     const duplicate = parsed.error.issues.some((issue) => issue.message === "duplicate_batch_id");
-    const memberOperation = parsed.error.issues.some((issue) => issue.message === "member_operation_forbidden");
-    throw usageError(duplicate ? "duplicate_batch_id" : memberOperation ? "member_operation_forbidden" : "invalid_batch", duplicate ? "Batch item IDs must be unique." : memberOperation ? "Member operations are not permitted in batch input." : "Batch input does not match the pinned contract.");
+    const unknownOperation = parsed.error.issues.some((issue) => issue.message === "unknown_operation");
+    throw usageError(duplicate ? "duplicate_batch_id" : unknownOperation ? "unknown_operation" : "invalid_batch", duplicate ? "Batch item IDs must be unique." : unknownOperation ? "Batch operation must be content.list or docs.ask." : "Batch input does not match the pinned contract.");
   }
   const payload = await http.requestJson({
     method: "POST", path: "/api/v1/batch", timeoutMs, maxBytes: 1_048_576, body: parsed.data,
     validate: (value) => parseSchema(batchResponseSchema, value),
   });
-  if (payload.items.length !== parsed.data.items.length || payload.items.some((item, index) => item.id !== parsed.data.items[index]?.id)) {
-    throw new CliError("batch_order_mismatch", "Batch response did not preserve request order.", 5);
+  if (payload.items.length !== parsed.data.items.length || payload.items.some((item, index) => {
+    const requestItem = parsed.data.items[index];
+    return requestItem === undefined || item.id !== requestItem.id || item.operation !== requestItem.operation;
+  })) {
+    throw new CliError("batch_correlation_mismatch", "Batch response did not preserve request ID and operation order.", 5);
   }
   const hasError = payload.items.some((item) => item.status === "error");
   const human = payload.items.map((item) => item.status === "ok" ? `${item.id}: ok` : `${item.id}: error (${item.error.code})`).join("\n");

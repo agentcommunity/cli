@@ -102,21 +102,28 @@ describe("the seven read-only commands", () => {
 
   test.each([
     [{ items: [{ id: "same", operation: "content.list", arguments: {} }, { id: "same", operation: "content.list", arguments: {} }] }, "duplicate_batch_id"],
-    [{ items: [{ id: "x", operation: "member.lookup", arguments: {} }] }, "member_operation_forbidden"],
-  ])("rejects malformed or member-capable batch envelopes locally", async (input, code) => {
+    [{ items: [{ id: "x", operation: "member.lookup", arguments: {} }] }, "unknown_operation"],
+    [{ items: [{ id: "x", operation: "register_agent", arguments: { agent_name: "fixture", email: "fixture@example.com" } }] }, "unknown_operation"],
+    [{ items: [{ id: "x", operation: "future.read", arguments: { url: "https://evil.example", headers: { Authorization: "Bearer fixture-secret" }, credential: "sk_live_fixture_secret" } }] }, "unknown_operation"],
+    [{ items: [{ id: "x", operation: "content.list", arguments: { url: "https://evil.example" } }] }, "invalid_batch"],
+    [{ items: [{ id: "x", operation: "docs.ask", arguments: { query: "Valid question?", headers: { Authorization: "Bearer fixture-secret" } } }] }, "invalid_batch"],
+    [{ items: [{ id: "x", operation: "content.list" }] }, "invalid_batch"],
+    [{ items: [{ id: "x", operation: "content.list", arguments: {}, url: "https://evil.example", headers: {}, credentials: "fixture-secret" }] }, "invalid_batch"],
+  ])("rejects every operation or argument outside the closed batch contract locally", async (input, code) => {
     const batchHarness = harness({ readFile: vi.fn().mockResolvedValue(Buffer.from(JSON.stringify(input))) });
     expect(await runCli(["batch", "input.json"], batchHarness.dependencies)).toBe(2);
     expect(JSON.parse(batchHarness.output().stderr)).toMatchObject({ error: { code } });
     expect(batchHarness.dependencies.http.requestJson).not.toHaveBeenCalled();
   });
 
-  test("posts an unknown non-member operation unchanged for the contract-defined item error", async () => {
-    const request = { items: [{ id: "x", operation: "future.read", arguments: { fixture: true } }] };
-    const response = { items: [{ id: "x", operation: "future.read", status: "error", error: { code: "unknown_operation", message: "Unsupported operation" } }] };
+  test("rejects a same-ID response whose operation does not match the ordered request item", async () => {
+    const request = { items: [{ id: "x", operation: "content.list", arguments: {} }] };
+    const response = { items: [{ id: "x", operation: "docs.ask", status: "ok", result: { query: "What is AID?", answer: "Fixture", sources: [] } }] };
     const requestJson = vi.fn().mockResolvedValue(response);
     const batchHarness = harness({ http: { requestJson }, readFile: vi.fn().mockResolvedValue(Buffer.from(JSON.stringify(request))) });
-    expect(await runCli(["batch", "input.json", "--json"], batchHarness.dependencies)).toBe(8);
-    expect(requestJson).toHaveBeenCalledWith(expect.objectContaining({ body: request }));
+    expect(await runCli(["batch", "input.json", "--json"], batchHarness.dependencies)).toBe(5);
+    expect(batchHarness.output().stdout).toBe("");
+    expect(JSON.parse(batchHarness.output().stderr)).toMatchObject({ error: { code: "batch_correlation_mismatch" } });
   });
 
   test("maps negative member and certificate states to stable exits while printing payloads", async () => {

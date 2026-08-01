@@ -6,6 +6,14 @@ export const MCP_PROTOCOL_VERSION = "2026-07-28";
 export const PRODUCT_TOOL_NAMES = ["lookup_member", "get_community_stats", "register_agent", "verify_certificate"] as const;
 export type ReadOnlyToolName = "lookup_member" | "get_community_stats" | "verify_certificate";
 
+const EXPECTED_SERVER_INFO = {
+  icons: [{ mimeType: "image/png", sizes: ["180x180"], src: "https://agentcommunity.org/apple-touch-icon.png" }],
+  name: "agentcommunity",
+  title: "Agent Community",
+  version: "1.0.0",
+  websiteUrl: "https://agentcommunity.org",
+};
+
 export interface McpTransport {
   callTool<T>(name: ReadOnlyToolName, argumentsValue: Record<string, unknown>, validate: (value: unknown) => T, timeoutMs?: number): Promise<T>;
 }
@@ -73,6 +81,9 @@ export class McpClient implements McpTransport {
     const result = response.result;
     if (result.resultType !== "complete" || !Array.isArray(result.content) || result.content.length !== 1 || typeof result._meta !== "object" || result._meta === null || !("io.modelcontextprotocol/serverInfo" in result._meta)) {
       throw new CliError("mcp_protocol_error", "The MCP service returned an invalid modern result.", 5);
+    }
+    if (!isDeepStrictEqual((result._meta as Record<string, unknown>)["io.modelcontextprotocol/serverInfo"], EXPECTED_SERVER_INFO)) {
+      throw new CliError("mcp_protocol_error", "The MCP service identity did not match the pinned contract.", 5);
     }
     const content = result.content[0];
     if (typeof content !== "object" || content === null || (content as Record<string, unknown>).type !== "text" || typeof (content as Record<string, unknown>).text !== "string") {

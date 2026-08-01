@@ -55,8 +55,8 @@ export const batchRequestSchema = z.object({ items: z.array(batchEnvelopeItemSch
     if (item.operation === "docs.ask" && !docsArgumentsSchema.safeParse(item.arguments).success) {
       context.addIssue({ code: "custom", message: "invalid_known_arguments", path: ["items", index, "arguments"] });
     }
-    if (item.operation === "lookup_member" || item.operation.startsWith("member.")) {
-      context.addIssue({ code: "custom", message: "member_operation_forbidden", path: ["items", index, "operation"] });
+    if (item.operation !== "content.list" && item.operation !== "docs.ask") {
+      context.addIssue({ code: "custom", message: "unknown_operation", path: ["items", index, "operation"] });
     }
   }
 });
