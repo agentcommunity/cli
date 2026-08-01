@@ -1,0 +1,116 @@
+{
+  "fixtures": [
+    {
+      "name": "content_list",
+      "request": {
+        "headers": {
+          "Accept": "application/json"
+        },
+        "method": "GET",
+        "path": "/api/v1/content?type=docs&limit=1"
+      },
+      "response": {
+        "body": {
+          "items": [
+            {
+              "description": "Synthetic published-content fixture.",
+              "href": "/docs",
+              "title": "[fixture] Documentation index",
+              "type": "docs"
+            }
+          ],
+          "page": {
+            "has_more": true,
+            "limit": 1,
+            "next_cursor": "fixture_cursor_page_2"
+          }
+        },
+        "http_status": 200
+      }
+    },
+    {
+      "name": "content_search",
+      "request": {
+        "headers": {
+          "Accept": "application/json"
+        },
+        "method": "GET",
+        "path": "/api/v1/content?q=agent%20onboarding&type=docs&limit=5"
+      },
+      "response": {
+        "body": {
+          "items": [
+            {
+              "description": "Synthetic published-content search fixture.",
+              "href": "/docs/agent-onboarding",
+              "title": "[fixture] Agent onboarding",
+              "type": "docs"
+            }
+          ],
+          "page": {
+            "has_more": false,
+            "limit": 5,
+            "next_cursor": null
+          }
+        },
+        "http_status": 200
+      }
+    },
+    {
+      "name": "docs_ask_non_streaming",
+      "request": {
+        "body": {
+          "query": "How can agents discover Agent Community resources?",
+          "streaming": false,
+          "top_k": 3
+        },
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/ask"
+      },
+      "response": {
+        "body": {
+          "_meta": {
+            "mode": "list",
+            "response_type": "answer",
+            "site": "agentcommunity.org",
+            "version": "0.55"
+          },
+          "answer": "[fixture] Use the published discovery and documentation surfaces.",
+          "content": [
+            {
+              "@context": "https://schema.org",
+              "@id": "https://agentcommunity.org/docs/agent-onboarding",
+              "@type": "Article",
+              "description": "Synthetic published-document fixture.",
+              "name": "[fixture] Agent onboarding",
+              "url": "https://agentcommunity.org/docs/agent-onboarding"
+            }
+          ],
+          "query": "How can agents discover Agent Community resources?",
+          "results": [
+            {
+              "description": "Synthetic published-document fixture.",
+              "name": "[fixture] Agent onboarding",
+              "schema_object": {
+                "@context": "https://schema.org",
+                "@id": "https://agentcommunity.org/docs/agent-onboarding",
+                "@type": "Article",
+                "description": "Synthetic published-document fixture.",
+                "name": "[fixture] Agent onboarding",
+                "url": "https://agentcommunity.org/docs/agent-onboarding"
+              },
+              "site": "agentcommunity.org",
+              "url": "https://agentcommunity.org/docs/agent-onboarding"
+            }
+          ]
+        },
+        "http_status": 200
+      }
+    }
+  ],
+  "origin": "https://agentcommunity.org"
+}

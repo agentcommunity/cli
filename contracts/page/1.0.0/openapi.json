@@ -1,0 +1,4960 @@
+{
+  "components": {
+    "schemas": {
+      "AgentAccessTokenRevocation": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "token_type_hint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "AgentApiError": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "enum": [
+              "invalid_request",
+              "unauthorized",
+              "forbidden",
+              "rate_limited",
+              "service_unavailable"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "AgentAuthError": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "error_description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "error_description"
+        ],
+        "type": "object"
+      },
+      "AgentAuthorizationEnvelope": {
+        "additionalProperties": false,
+        "properties": {
+          "access_token_expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "delegation_expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "registration_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "enum": [
+                "agent.account.read",
+                "agent.registrations.read"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "status": {
+            "const": "approved",
+            "type": "string"
+          }
+        },
+        "required": [
+          "registration_id",
+          "status",
+          "scopes",
+          "access_token_expires_at",
+          "delegation_expires_at"
+        ],
+        "type": "object"
+      },
+      "AgentOwnAccountResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "account": {
+            "additionalProperties": false,
+            "properties": {
+              "email": {
+                "format": "email",
+                "type": "string"
+              },
+              "email_verified": {
+                "const": true,
+                "type": "boolean"
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "email_verified"
+            ],
+            "type": "object"
+          },
+          "authorization": {
+            "$ref": "#/components/schemas/AgentAuthorizationEnvelope"
+          }
+        },
+        "required": [
+          "account",
+          "authorization"
+        ],
+        "type": "object"
+      },
+      "AgentOwnRegistrationsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "registrations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "registration_type": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "registration_type",
+                "status"
+              ],
+              "type": "object"
+            },
+            "maxItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "registrations"
+        ],
+        "type": "object"
+      },
+      "ApprovedClaimTokenResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssertionExchangeResponse"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "access_token": {
+                "pattern": "^aca_[A-Za-z0-9_-]{43}$",
+                "type": "string"
+              },
+              "assertion_expires": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "expires_in": {
+                "maximum": 3600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "identity_assertion": {
+                "maxLength": 8192,
+                "minLength": 1,
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "token_type": {
+                "const": "Bearer",
+                "type": "string"
+              }
+            },
+            "required": [
+              "access_token",
+              "token_type",
+              "expires_in",
+              "scope",
+              "identity_assertion",
+              "assertion_expires"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "AssertionExchangeResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "access_token": {
+            "pattern": "^aca_[A-Za-z0-9_-]{43}$",
+            "type": "string"
+          },
+          "expires_in": {
+            "maximum": 3600,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "token_type": {
+            "const": "Bearer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in",
+          "scope"
+        ],
+        "type": "object"
+      },
+      "AssertionGrant": {
+        "additionalProperties": false,
+        "properties": {
+          "assertion": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "type": "string"
+          },
+          "grant_type": {
+            "const": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "type": "string"
+          },
+          "resource": {
+            "const": "https://agentcommunity.org/api",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "assertion",
+          "resource"
+        ],
+        "type": "object"
+      },
+      "BatchEnvelopeItem": {
+        "additionalProperties": false,
+        "properties": {
+          "arguments": {},
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "type": "string"
+          },
+          "operation": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "operation",
+          "arguments"
+        ],
+        "type": "object"
+      },
+      "BatchKnownItem": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "arguments": {
+                "additionalProperties": false,
+                "properties": {
+                  "cursor": {
+                    "maxLength": 256,
+                    "type": "string"
+                  },
+                  "limit": {
+                    "default": 20,
+                    "maximum": 50,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "query": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "docs",
+                      "blog",
+                      "page"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "id": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                "type": "string"
+              },
+              "operation": {
+                "const": "content.list",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "operation",
+              "arguments"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "arguments": {
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "maxLength": 500,
+                    "minLength": 2,
+                    "type": "string"
+                  },
+                  "top_k": {
+                    "default": 5,
+                    "maximum": 10,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              },
+              "id": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                "type": "string"
+              },
+              "operation": {
+                "const": "docs.ask",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "operation",
+              "arguments"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "BatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments": {},
+                "id": {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                  "type": "string"
+                },
+                "operation": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "operation",
+                "arguments"
+              ],
+              "type": "object"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "BatchResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                          "type": "string"
+                        },
+                        "operation": {
+                          "const": "content.list",
+                          "type": "string"
+                        },
+                        "result": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "items": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "href": {
+                                    "pattern": "^\\/(?!\\/)",
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "enum": [
+                                      "docs",
+                                      "blog",
+                                      "page"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "title",
+                                  "description",
+                                  "href",
+                                  "type"
+                                ],
+                                "type": "object"
+                              },
+                              "maxItems": 50,
+                              "type": "array"
+                            },
+                            "page": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "has_more": {
+                                  "type": "boolean"
+                                },
+                                "limit": {
+                                  "maximum": 50,
+                                  "minimum": 1,
+                                  "type": "integer"
+                                },
+                                "next_cursor": {
+                                  "anyOf": [
+                                    {
+                                      "maxLength": 256,
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "limit",
+                                "next_cursor",
+                                "has_more"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "items",
+                            "page"
+                          ],
+                          "type": "object"
+                        },
+                        "status": {
+                          "const": "ok",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "operation",
+                        "status",
+                        "result"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                          "type": "string"
+                        },
+                        "operation": {
+                          "const": "docs.ask",
+                          "type": "string"
+                        },
+                        "result": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "answer": {
+                              "maxLength": 1500,
+                              "type": "string"
+                            },
+                            "query": {
+                              "maxLength": 500,
+                              "type": "string"
+                            },
+                            "sources": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "description": {
+                                    "maxLength": 500,
+                                    "type": "string"
+                                  },
+                                  "excerpt": {
+                                    "maxLength": 320,
+                                    "type": "string"
+                                  },
+                                  "path": {
+                                    "pattern": "^\\/(?!\\/)",
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "maxLength": 200,
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "format": "uri",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "title",
+                                  "description",
+                                  "path",
+                                  "url",
+                                  "excerpt"
+                                ],
+                                "type": "object"
+                              },
+                              "maxItems": 10,
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "query",
+                            "answer",
+                            "sources"
+                          ],
+                          "type": "object"
+                        },
+                        "status": {
+                          "const": "ok",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "operation",
+                        "status",
+                        "result"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "code": {
+                              "const": "unknown_operation",
+                              "type": "string"
+                            },
+                            "message": {
+                              "const": "Unsupported operation",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "code": {
+                              "const": "invalid_arguments",
+                              "type": "string"
+                            },
+                            "message": {
+                              "const": "Invalid arguments",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "code": {
+                              "const": "operation_failed",
+                              "type": "string"
+                            },
+                            "message": {
+                              "const": "Operation failed",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "code": {
+                              "const": "deadline_exceeded",
+                              "type": "string"
+                            },
+                            "message": {
+                              "const": "Batch deadline exceeded",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "code": {
+                              "const": "response_too_large",
+                              "type": "string"
+                            },
+                            "message": {
+                              "const": "Operation response exceeds its limit",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "code": {
+                              "const": "total_response_too_large",
+                              "type": "string"
+                            },
+                            "message": {
+                              "const": "Batch response budget exceeded",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "id": {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                      "type": "string"
+                    },
+                    "operation": {
+                      "maxLength": 128,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "status": {
+                      "const": "error",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "operation",
+                    "status",
+                    "error"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "BatchRouteError": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "const": "invalid_json",
+                    "type": "string"
+                  },
+                  "message": {
+                    "const": "Invalid JSON request body",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "const": "invalid_request",
+                    "type": "string"
+                  },
+                  "message": {
+                    "const": "Invalid batch request",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "const": "request_too_large",
+                    "type": "string"
+                  },
+                  "message": {
+                    "const": "Batch request exceeds 262144 bytes",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "const": "unsupported_media_type",
+                    "type": "string"
+                  },
+                  "message": {
+                    "const": "Content-Type must be application/json",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "const": "rate_limited",
+                    "type": "string"
+                  },
+                  "message": {
+                    "const": "Too many batch requests",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "const": "internal_error",
+                    "type": "string"
+                  },
+                  "message": {
+                    "const": "Batch execution failed",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "ClaimCeremony": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_in": {
+            "const": 600,
+            "type": "integer"
+          },
+          "interval": {
+            "const": 5,
+            "type": "integer"
+          },
+          "user_code": {
+            "pattern": "^\\d{6}$",
+            "type": "string"
+          },
+          "verification_uri": {
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_code",
+          "expires_in",
+          "verification_uri",
+          "interval"
+        ],
+        "type": "object"
+      },
+      "ClaimRefreshRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_token": {
+            "pattern": "^clm_[A-Za-z0-9_-]{43}$",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "maxLength": 320,
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_token",
+          "email"
+        ],
+        "type": "object"
+      },
+      "ClaimRefreshResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_attempt": {
+            "$ref": "#/components/schemas/ClaimCeremony"
+          },
+          "claim_attempt_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "registration_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "const": "initiated",
+            "type": "string"
+          }
+        },
+        "required": [
+          "registration_id",
+          "claim_attempt_id",
+          "status",
+          "expires_at",
+          "claim_attempt"
+        ],
+        "type": "object"
+      },
+      "ClaimTokenGrant": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_token": {
+            "pattern": "^clm_[A-Za-z0-9_-]{43}$",
+            "type": "string"
+          },
+          "grant_type": {
+            "const": "urn:workos:agent-auth:grant-type:claim",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "claim_token"
+        ],
+        "type": "object"
+      },
+      "ContentPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContentSearchResult"
+            },
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/CursorPage"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "type": "object"
+      },
+      "ContentSearchResult": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "href": {
+            "description": "Site-relative path, e.g. /docs/getting-started or /blog/some-post.",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "docs",
+              "blog",
+              "page"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "href",
+          "type"
+        ],
+        "type": "object"
+      },
+      "CursorPage": {
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "limit": {
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "limit",
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "error": {
+            "description": "Machine-readable error code, e.g. query_too_short, rate_limited, not_found.",
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "GlobePoint": {
+        "properties": {
+          "count": {
+            "description": "Number of member organizations aggregated into this point (city cluster or country-jitter cell).",
+            "type": "integer"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "count"
+        ],
+        "type": "object"
+      },
+      "NLWebAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "_meta": {
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "const": "list",
+                "type": "string"
+              },
+              "response_type": {
+                "description": "answer for a normal query; capability for the parameterless probe response.",
+                "enum": [
+                  "answer",
+                  "capability"
+                ],
+                "type": "string"
+              },
+              "site": {
+                "const": "agentcommunity.org",
+                "type": "string"
+              },
+              "version": {
+                "const": "0.55",
+                "type": "string"
+              }
+            },
+            "required": [
+              "version",
+              "response_type",
+              "mode",
+              "site"
+            ],
+            "type": "object"
+          },
+          "answer": {
+            "description": "Deterministic extractive answer assembled from cited documentation. Each internal source excerpt is bounded to 320 characters before the full answer is capped.",
+            "maxLength": 1500,
+            "type": "string"
+          },
+          "content": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "@context": {
+                  "const": "https://schema.org",
+                  "type": "string"
+                },
+                "@id": {
+                  "format": "uri",
+                  "type": "string"
+                },
+                "@type": {
+                  "const": "Article",
+                  "type": "string"
+                },
+                "description": {
+                  "maxLength": 500,
+                  "type": "string"
+                },
+                "name": {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                "url": {
+                  "format": "uri",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@context",
+                "@type",
+                "@id",
+                "name",
+                "description",
+                "url"
+              ],
+              "type": "object"
+            },
+            "maxItems": 10,
+            "type": "array"
+          },
+          "query": {
+            "description": "Echo of the caller query; empty string in a capability response.",
+            "maxLength": 500,
+            "type": "string"
+          },
+          "results": {
+            "description": "Canonical NLWeb result list. Array order is the ranking; no relevance score is published.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "maxLength": 500,
+                  "type": "string"
+                },
+                "name": {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                "schema_object": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "@context": {
+                      "const": "https://schema.org",
+                      "type": "string"
+                    },
+                    "@id": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "@type": {
+                      "const": "Article",
+                      "type": "string"
+                    },
+                    "description": {
+                      "maxLength": 500,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 200,
+                      "type": "string"
+                    },
+                    "url": {
+                      "format": "uri",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "@context",
+                    "@type",
+                    "@id",
+                    "name",
+                    "description",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "site": {
+                  "const": "agentcommunity.org",
+                  "type": "string"
+                },
+                "url": {
+                  "format": "uri",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url",
+                "site",
+                "name",
+                "description",
+                "schema_object"
+              ],
+              "type": "object"
+            },
+            "maxItems": 10,
+            "type": "array"
+          }
+        },
+        "required": [
+          "_meta",
+          "query",
+          "answer",
+          "results",
+          "content"
+        ],
+        "type": "object"
+      },
+      "SandboxRouteError": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "enum": [
+              "invalid_request",
+              "request_too_large",
+              "unsupported_media_type",
+              "rate_limited",
+              "simulation_unavailable"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "SandboxSimulationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "scenario": {
+            "enum": [
+              "agent_auth_challenge",
+              "agent_auth_pending",
+              "agent_auth_success",
+              "batch_mixed_result"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario"
+        ],
+        "type": "object"
+      },
+      "ServiceAuthRegistrationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "client_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "login_hint": {
+            "format": "email",
+            "maxLength": 320,
+            "type": "string"
+          },
+          "scopes": {
+            "default": [
+              "agent.account.read",
+              "agent.registrations.read"
+            ],
+            "items": {
+              "enum": [
+                "agent.account.read",
+                "agent.registrations.read"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "type": {
+            "const": "service_auth",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "login_hint"
+        ],
+        "type": "object"
+      },
+      "ServiceAuthRegistrationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "claim": {
+            "$ref": "#/components/schemas/ClaimCeremony"
+          },
+          "claim_token": {
+            "pattern": "^clm_[A-Za-z0-9_-]{43}$",
+            "type": "string"
+          },
+          "claim_token_expires": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "claim_url": {
+            "const": "https://agentcommunity.org/agent/identity/claim",
+            "type": "string"
+          },
+          "post_claim_scopes": {
+            "items": {
+              "enum": [
+                "agent.account.read",
+                "agent.registrations.read"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "registration_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "registration_type": {
+            "const": "service_auth",
+            "type": "string"
+          }
+        },
+        "required": [
+          "registration_id",
+          "registration_type",
+          "claim_url",
+          "claim_token",
+          "claim_token_expires",
+          "post_claim_scopes",
+          "claim"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "agentBearer": {
+        "bearerFormat": "opaque aca_ access token",
+        "description": "Header-only reusable access token for scoped own-account reads.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "supabaseOAuth": {
+        "description": "OAuth 2.0 authorization-code flow (PKCE S256) via Supabase Auth. No API tokens are issued for the public endpoints in this spec; this scheme documents the human sign-in flow only. Each scope below is described with the exact data it exposes — none of them authorize a call to any path in this document, which is why every operation carries security: [].",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://tcymqfwwphacnosnnzxl.supabase.co/auth/v1/oauth/authorize",
+            "scopes": {
+              "email": "Read the signed-in person's email address and its verification state. Grants no read or write access to any API in this document.",
+              "openid": "Issue an ID token asserting the signed-in subject identifier. Grants no read or write access to any API in this document.",
+              "profile": "Read the signed-in person's display name and avatar. Grants no read or write access to any API in this document."
+            },
+            "tokenUrl": "https://tcymqfwwphacnosnnzxl.supabase.co/auth/v1/oauth/token"
+          }
+        },
+        "type": "oauth2"
+      },
+      "supabaseOidc": {
+        "description": "Human browser OpenID Connect via the canonical Supabase issuer. Member-only surfaces use cookie sessions established through this flow. This is not Agent Community OIDC discovery and grants no capability on the public operations in this document.",
+        "openIdConnectUrl": "https://tcymqfwwphacnosnnzxl.supabase.co/auth/v1/.well-known/openid-configuration",
+        "type": "openIdConnect"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "hello@agentcommunity.org",
+      "name": "Agent Community",
+      "url": "https://agentcommunity.org/contact"
+    },
+    "description": "Public and explicitly scoped read APIs for agentcommunity.org — an open community of the companies, researchers, and developers building the agentic web, and the applicant for the proposed .agent top-level domain (pending ICANN approval). Includes globe data, site content search, deterministic NLWeb-compatible public-documentation answers at /ask, a hosted MCP server at /mcp, and two Bearer-protected own-account resources. Exact member lookup is provided through MCP; broad directory access is not a supported anonymous integration. Anonymous operations declare security: []; own-account operations declare their exact agentBearer scope. API versioning: public REST endpoints are versioned by URL path (/api/v1/). Breaking changes ship as a new version prefix; prior versions are intended to remain available for a transition period (target: at least 6 months) after a successor ships, with retirement announced in the spec via deprecated: true. Unversioned legacy paths are deprecated aliases of /api/v1.",
+    "title": "Agent Community Public API",
+    "version": "1.3.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/.well-known/jwks.json": {
+      "get": {
+        "description": "Public Ed25519 verification keys for signed agent authorization assertions. Private signing material is never exposed.",
+        "operationId": "getAgentAuthorizationServerJwks",
+        "responses": {
+          "200": {
+            "content": {
+              "application/jwk-set+json": {
+                "schema": {
+                  "properties": {
+                    "keys": {
+                      "items": {
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "keys"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Public JSON Web Key Set."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Read Agent Community agent authorization public keys"
+      }
+    },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "description": "Token-only WorkOS auth.md profile metadata composed with IETF OAuth standards. response_types_supported is deliberately omitted because no authorization response type exists.",
+        "operationId": "getAgentAuthorizationServerMetadata",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Agent authorization-server metadata."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Discover the Agent Community agent authorization server"
+      }
+    },
+    "/.well-known/oauth-protected-resource/api": {
+      "get": {
+        "description": "RFC 9728 metadata for the exact protected resource https://agentcommunity.org/api. This discovery operation is public; the protected resource itself is separate.",
+        "operationId": "getAgentApiProtectedResourceMetadata",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Protected-resource metadata."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Discover authorization for the protected Agent API resource"
+      }
+    },
+    "/agent/identity": {
+      "post": {
+        "description": "Starts the WorkOS service_auth ceremony. Strict JSON, 16 KiB maximum. Accepts absent Origin or exactly https://agentcommunity.org; no CORS or OPTIONS extension.",
+        "operationId": "startServiceAuthorization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAuthRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAuthRegistrationResponse"
+                }
+              }
+            },
+            "description": "One-time outer claim token and initial ten-minute claim attempt.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-start-ip\";q=5;w=60, \"agent-auth-start-hint\";q=3;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Malformed or non-canonical registration request.",
+            "headers": {}
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Present Origin was not the exact allowed origin.",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization runtime is disabled.",
+            "headers": {}
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Request body exceeds 16 KiB.",
+            "headers": {}
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Content-Type is not application/json with optional UTF-8 charset.",
+            "headers": {}
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Trusted-IP or normalized-login-hint start limit rejected the request.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-start-ip\";q=5;w=60, \"agent-auth-start-hint\";q=3;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization service is unavailable.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-start-ip\";q=5;w=60, \"agent-auth-start-hint\";q=3;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Start user-claimed service authorization"
+      }
+    },
+    "/agent/identity/claim": {
+      "post": {
+        "description": "Atomically closes the current attempt and creates a fresh ten-minute attempt while the outer claim remains active. It never returns the outer claim token.",
+        "operationId": "refreshServiceAuthorizationClaim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimRefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimRefreshResponse"
+                }
+              }
+            },
+            "description": "Fresh initiated claim attempt.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-start-ip\";q=5;w=60, \"agent-auth-start-hint\";q=3;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Malformed request.",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "invalid_claim_token.",
+            "headers": {}
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Present Origin was not the exact allowed origin.",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization runtime is disabled.",
+            "headers": {}
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "claimed_or_in_flight.",
+            "headers": {}
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "claim_expired.",
+            "headers": {}
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Request body exceeds 16 KiB.",
+            "headers": {}
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Content-Type is not application/json with optional UTF-8 charset.",
+            "headers": {}
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Trusted-IP or normalized-login-hint start limit rejected the request.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-start-ip\";q=5;w=60, \"agent-auth-start-hint\";q=3;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization service is unavailable.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-start-ip\";q=5;w=60, \"agent-auth-start-hint\";q=3;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Rotate the active claim attempt"
+      }
+    },
+    "/api/content-search": {
+      "get": {
+        "deprecated": true,
+        "description": "Unversioned alias of /api/v1/content-search. Still supported; new integrations should use /api/v1/content-search. Deprecated for new integrations: use /api/v1/content?q=... for deterministic cursor pagination.",
+        "operationId": "searchContentLegacy",
+        "parameters": [
+          {
+            "description": "Search query.",
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ContentSearchResult"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Content search results."
+          }
+        },
+        "security": [],
+        "summary": "Search site content (legacy alias)"
+      }
+    },
+    "/api/map/globe": {
+      "get": {
+        "deprecated": true,
+        "description": "Unversioned alias of /api/v1/globe. Still supported; new integrations should use /api/v1/globe.",
+        "operationId": "getGlobeDataLegacy",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "countries": {
+                      "type": "integer"
+                    },
+                    "plottedOrgs": {
+                      "type": "integer"
+                    },
+                    "points": {
+                      "items": {
+                        "$ref": "#/components/schemas/GlobePoint"
+                      },
+                      "type": "array"
+                    },
+                    "totalOrgs": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Globe points and totals."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Member globe data (legacy alias)"
+      }
+    },
+    "/api/v1/agent/account": {
+      "get": {
+        "description": "Returns only the verified auth account and the current delegation authorization envelope. Accepts no query parameters or request body.",
+        "operationId": "getOwnAgentAccount",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentOwnAccountResponse"
+                }
+              }
+            },
+            "description": "Verified own-account projection.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Invalid request transport, including query parameters, body signals, or multiple credentials.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "RFC 6750 Bearer challenge. Child resources omit resource_metadata and error descriptions.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Missing, malformed, invalid, expired, revoked, or incorrectly bound access token.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "RFC 6750 Bearer challenge. Child resources omit resource_metadata and error descriptions.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Foreign Origin or insufficient route scope.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "RFC 6750 Bearer challenge. Child resources omit resource_metadata and error descriptions.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Fail-closed token rate limit rejection.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "const": "60",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Authorization repository, account reader, or server configuration unavailable.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "agentBearer": [
+              "agent.account.read"
+            ]
+          }
+        ],
+        "summary": "Read the access token owner account"
+      }
+    },
+    "/api/v1/agent/registrations": {
+      "get": {
+        "description": "Returns zero or one registration selected only by the authenticated user ID. Accepts no search, filter, pagination, query parameters, or request body.",
+        "operationId": "getOwnAgentRegistrations",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentOwnRegistrationsResponse"
+                }
+              }
+            },
+            "description": "Safe own-registration projection.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Invalid request transport, including query parameters, body signals, or multiple credentials.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "RFC 6750 Bearer challenge. Child resources omit resource_metadata and error descriptions.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Missing, malformed, invalid, expired, revoked, or incorrectly bound access token.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "RFC 6750 Bearer challenge. Child resources omit resource_metadata and error descriptions.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Foreign Origin or insufficient route scope.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "RFC 6750 Bearer challenge. Child resources omit resource_metadata and error descriptions.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Fail-closed token rate limit rejection.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "const": "60",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApiError"
+                }
+              }
+            },
+            "description": "Authorization repository, account reader, or server configuration unavailable.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-api\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "agentBearer": [
+              "agent.registrations.read"
+            ]
+          }
+        ],
+        "summary": "Read the access token owner registration"
+      }
+    },
+    "/api/v1/batch": {
+      "post": {
+        "description": "Anonymous JSON batch for content.list and docs.ask. One request carries at most 10 operations and at most 262144 bytes; each current operation costs 1 against a total cost budget of 10. Execution is sequential with concurrency one. The content.list item response cap is 262144 bytes, the docs.ask item response cap is 65536 bytes, and the total encoded response cap is 1048576 bytes. The trusted-IP policy allows 10 requests per 60 seconds. The 10-second batch execution deadline begins when validated execution starts, and no later operation begins once that deadline is reached. Work already running may finish. Envelope failures reject the request; operation failures remain ordered item-level errors in an HTTP 200 response, never 207.",
+        "operationId": "executePublicReadBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "items": [
+                  {
+                    "arguments": {
+                      "limit": 5,
+                      "query": "agent discovery",
+                      "type": "docs"
+                    },
+                    "id": "content-1",
+                    "operation": "content.list"
+                  },
+                  {
+                    "arguments": {
+                      "query": "How can agents discover AgentCommunity resources?",
+                      "top_k": 3
+                    },
+                    "id": "docs-1",
+                    "operation": "docs.ask"
+                  }
+                ]
+              },
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequest"
+              }
+            }
+          },
+          "description": "Strict batch envelope. Item IDs must be unique even though JSON Schema uniqueItems cannot express uniqueness by one object property. Unknown operation names remain envelope-valid and produce item-level errors; the closed known-operation argument union is BatchKnownItem.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResponse"
+                }
+              }
+            },
+            "description": "Ordered per-item success and closed error results, including mixed outcomes.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "const": "*",
+                  "type": "string"
+                }
+              },
+              "Access-Control-Expose-Headers": {
+                "schema": {
+                  "const": "RateLimit-Policy, RateLimit-Limit, X-RateLimit-Limit, Retry-After",
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-batch\";q=10;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchRouteError"
+                }
+              }
+            },
+            "description": "Malformed JSON or invalid strict batch envelope.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "const": "*",
+                  "type": "string"
+                }
+              },
+              "Access-Control-Expose-Headers": {
+                "schema": {
+                  "const": "RateLimit-Policy, RateLimit-Limit, X-RateLimit-Limit, Retry-After",
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-batch\";q=10;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchRouteError"
+                }
+              }
+            },
+            "description": "Request body exceeds 262144 bytes.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "const": "*",
+                  "type": "string"
+                }
+              },
+              "Access-Control-Expose-Headers": {
+                "schema": {
+                  "const": "RateLimit-Policy, RateLimit-Limit, X-RateLimit-Limit, Retry-After",
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-batch\";q=10;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchRouteError"
+                }
+              }
+            },
+            "description": "Content-Type is not application/json or Content-Encoding is not identity.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "const": "*",
+                  "type": "string"
+                }
+              },
+              "Access-Control-Expose-Headers": {
+                "schema": {
+                  "const": "RateLimit-Policy, RateLimit-Limit, X-RateLimit-Limit, Retry-After",
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-batch\";q=10;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchRouteError"
+                }
+              }
+            },
+            "description": "Trusted client identity is absent or the fail-closed batch limiter rejected the request.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "const": "*",
+                  "type": "string"
+                }
+              },
+              "Access-Control-Expose-Headers": {
+                "schema": {
+                  "const": "RateLimit-Policy, RateLimit-Limit, X-RateLimit-Limit, Retry-After",
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-batch\";q=10;w=60",
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "const": "60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchRouteError"
+                }
+              }
+            },
+            "description": "Batch execution or validated response serialization failed.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "const": "*",
+                  "type": "string"
+                }
+              },
+              "Access-Control-Expose-Headers": {
+                "schema": {
+                  "const": "RateLimit-Policy, RateLimit-Limit, X-RateLimit-Limit, Retry-After",
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-batch\";q=10;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "10",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Execute a bounded batch of public reads",
+        "x-known-item-schema": {
+          "$ref": "#/components/schemas/BatchKnownItem"
+        }
+      }
+    },
+    "/api/v1/content": {
+      "get": {
+        "operationId": "listPublicContent",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "enum": [
+                "docs",
+                "blog",
+                "page"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "maxLength": 256,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentPage"
+                }
+              }
+            },
+            "description": "A deterministic page of public content.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"public-content\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"public-content\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"public-content\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "enum": [
+                    "60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "List and search public site content with cursor pagination"
+      }
+    },
+    "/api/v1/content-search": {
+      "get": {
+        "deprecated": true,
+        "description": "Search blog posts, docs, and pages. Deprecated for new integrations: use /api/v1/content?q=... for deterministic cursor pagination.",
+        "operationId": "searchContent",
+        "parameters": [
+          {
+            "description": "Search query.",
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ContentSearchResult"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Content search results."
+          }
+        },
+        "security": [],
+        "summary": "Search site content"
+      }
+    },
+    "/api/v1/globe": {
+      "get": {
+        "description": "Geographic point data for the member globe visualization. Cached (5 min).",
+        "operationId": "getGlobeData",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "countries": {
+                      "type": "integer"
+                    },
+                    "plottedOrgs": {
+                      "type": "integer"
+                    },
+                    "points": {
+                      "items": {
+                        "$ref": "#/components/schemas/GlobePoint"
+                      },
+                      "type": "array"
+                    },
+                    "totalOrgs": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Globe points and totals."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Member globe data"
+      }
+    },
+    "/api/v1/sandbox/simulate": {
+      "post": {
+        "description": "Deterministic no-write contract simulator with exactly these fixture scenarios: agent_auth_challenge, agent_auth_pending, agent_auth_success, batch_mixed_result. Responses use the same production Zod response schemas and serializers with fixed synthetic values. The route never reads member data, calls production services, signs credentials, or performs writes. Requests are capped at 32768 bytes, and the trusted-IP policy allows 30 requests per 60 seconds.",
+        "operationId": "simulateAgentContract",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "scenario": "agent_auth_challenge"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SandboxSimulationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "agent_auth_challenge": {
+                    "summary": "Synthetic service authorization challenge",
+                    "value": {
+                      "claim": {
+                        "expires_in": 600,
+                        "interval": 5,
+                        "user_code": "000000",
+                        "verification_uri": "https://agentcommunity.org/agent/authorize?claim_attempt_token=sandbox_claim_attempt_fixture_only"
+                      },
+                      "claim_token": "sandbox_claim_token_fixture_only",
+                      "claim_token_expires": "2099-01-01T00:00:00.000Z",
+                      "claim_url": "https://agentcommunity.org/agent/identity/claim",
+                      "post_claim_scopes": [
+                        "agent.account.read",
+                        "agent.registrations.read"
+                      ],
+                      "registration_id": "00000000-0000-4000-8000-000000000501",
+                      "registration_type": "service_auth"
+                    }
+                  },
+                  "agent_auth_success": {
+                    "summary": "Synthetic approved agent authorization response",
+                    "value": {
+                      "access_token": "sandbox_access_token_fixture_only",
+                      "assertion_expires": "2099-01-01T00:00:00.000Z",
+                      "expires_in": 3600,
+                      "identity_assertion": "sandbox_identity_assertion_fixture_only",
+                      "scope": "agent.account.read agent.registrations.read",
+                      "token_type": "Bearer"
+                    }
+                  },
+                  "batch_mixed_result": {
+                    "summary": "Synthetic mixed public-read batch response",
+                    "value": {
+                      "items": [
+                        {
+                          "id": "sandbox-content",
+                          "operation": "content.list",
+                          "result": {
+                            "items": [
+                              {
+                                "description": "Synthetic fixture; no production content or member data.",
+                                "href": "/sandbox/fixtures/content",
+                                "title": "[sandbox fixture] Published content",
+                                "type": "page"
+                              }
+                            ],
+                            "page": {
+                              "has_more": false,
+                              "limit": 1,
+                              "next_cursor": null
+                            }
+                          },
+                          "status": "ok"
+                        },
+                        {
+                          "error": {
+                            "code": "unknown_operation",
+                            "message": "Unsupported operation"
+                          },
+                          "id": "sandbox-unknown",
+                          "operation": "sandbox.unknown",
+                          "status": "error"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "claim": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "expires_in": {
+                              "const": 600,
+                              "type": "number"
+                            },
+                            "interval": {
+                              "const": 5,
+                              "type": "number"
+                            },
+                            "user_code": {
+                              "pattern": "^\\d{6}$",
+                              "type": "string"
+                            },
+                            "verification_uri": {
+                              "format": "uri",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "user_code",
+                            "expires_in",
+                            "verification_uri",
+                            "interval"
+                          ],
+                          "type": "object"
+                        },
+                        "claim_token": {
+                          "maxLength": 8192,
+                          "minLength": 1,
+                          "pattern": "^[\\u0021-\\u007e]+$",
+                          "type": "string"
+                        },
+                        "claim_token_expires": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "claim_url": {
+                          "const": "https://agentcommunity.org/agent/identity/claim",
+                          "type": "string"
+                        },
+                        "post_claim_scopes": {
+                          "items": {
+                            "enum": [
+                              "agent.account.read",
+                              "agent.registrations.read"
+                            ],
+                            "type": "string"
+                          },
+                          "maxItems": 2,
+                          "minItems": 1,
+                          "type": "array"
+                        },
+                        "registration_id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$",
+                          "type": "string"
+                        },
+                        "registration_type": {
+                          "const": "service_auth",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "registration_id",
+                        "registration_type",
+                        "claim_url",
+                        "claim_token",
+                        "claim_token_expires",
+                        "post_claim_scopes",
+                        "claim"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "access_token": {
+                          "maxLength": 8192,
+                          "minLength": 1,
+                          "pattern": "^[\\u0021-\\u007e]+$",
+                          "type": "string"
+                        },
+                        "assertion_expires": {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                          "type": "string"
+                        },
+                        "expires_in": {
+                          "exclusiveMinimum": 0,
+                          "maximum": 3600,
+                          "type": "integer"
+                        },
+                        "identity_assertion": {
+                          "maxLength": 8192,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "scope": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "token_type": {
+                          "const": "Bearer",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "access_token",
+                        "token_type",
+                        "expires_in",
+                        "scope",
+                        "identity_assertion",
+                        "assertion_expires"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "id": {
+                                        "maxLength": 64,
+                                        "minLength": 1,
+                                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                                        "type": "string"
+                                      },
+                                      "operation": {
+                                        "const": "content.list",
+                                        "type": "string"
+                                      },
+                                      "result": {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "items": {
+                                            "items": {
+                                              "additionalProperties": false,
+                                              "properties": {
+                                                "description": {
+                                                  "type": "string"
+                                                },
+                                                "href": {
+                                                  "pattern": "^\\/(?!\\/)",
+                                                  "type": "string"
+                                                },
+                                                "title": {
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "enum": [
+                                                    "docs",
+                                                    "blog",
+                                                    "page"
+                                                  ],
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "title",
+                                                "description",
+                                                "href",
+                                                "type"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "maxItems": 50,
+                                            "type": "array"
+                                          },
+                                          "page": {
+                                            "additionalProperties": false,
+                                            "properties": {
+                                              "has_more": {
+                                                "type": "boolean"
+                                              },
+                                              "limit": {
+                                                "maximum": 50,
+                                                "minimum": 1,
+                                                "type": "integer"
+                                              },
+                                              "next_cursor": {
+                                                "anyOf": [
+                                                  {
+                                                    "maxLength": 256,
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "type": "null"
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+                                              "limit",
+                                              "next_cursor",
+                                              "has_more"
+                                            ],
+                                            "type": "object"
+                                          }
+                                        },
+                                        "required": [
+                                          "items",
+                                          "page"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "status": {
+                                        "const": "ok",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "operation",
+                                      "status",
+                                      "result"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "id": {
+                                        "maxLength": 64,
+                                        "minLength": 1,
+                                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                                        "type": "string"
+                                      },
+                                      "operation": {
+                                        "const": "docs.ask",
+                                        "type": "string"
+                                      },
+                                      "result": {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "answer": {
+                                            "maxLength": 1500,
+                                            "type": "string"
+                                          },
+                                          "query": {
+                                            "maxLength": 500,
+                                            "type": "string"
+                                          },
+                                          "sources": {
+                                            "items": {
+                                              "additionalProperties": false,
+                                              "properties": {
+                                                "description": {
+                                                  "maxLength": 500,
+                                                  "type": "string"
+                                                },
+                                                "excerpt": {
+                                                  "maxLength": 320,
+                                                  "type": "string"
+                                                },
+                                                "path": {
+                                                  "pattern": "^\\/(?!\\/)",
+                                                  "type": "string"
+                                                },
+                                                "title": {
+                                                  "maxLength": 200,
+                                                  "type": "string"
+                                                },
+                                                "url": {
+                                                  "format": "uri",
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "title",
+                                                "description",
+                                                "path",
+                                                "url",
+                                                "excerpt"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "maxItems": 10,
+                                            "type": "array"
+                                          }
+                                        },
+                                        "required": [
+                                          "query",
+                                          "answer",
+                                          "sources"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "status": {
+                                        "const": "ok",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "operation",
+                                      "status",
+                                      "result"
+                                    ],
+                                    "type": "object"
+                                  }
+                                ]
+                              },
+                              {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "error": {
+                                    "anyOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "code": {
+                                            "const": "unknown_operation",
+                                            "type": "string"
+                                          },
+                                          "message": {
+                                            "const": "Unsupported operation",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "code",
+                                          "message"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "code": {
+                                            "const": "invalid_arguments",
+                                            "type": "string"
+                                          },
+                                          "message": {
+                                            "const": "Invalid arguments",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "code",
+                                          "message"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "code": {
+                                            "const": "operation_failed",
+                                            "type": "string"
+                                          },
+                                          "message": {
+                                            "const": "Operation failed",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "code",
+                                          "message"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "code": {
+                                            "const": "deadline_exceeded",
+                                            "type": "string"
+                                          },
+                                          "message": {
+                                            "const": "Batch deadline exceeded",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "code",
+                                          "message"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "code": {
+                                            "const": "response_too_large",
+                                            "type": "string"
+                                          },
+                                          "message": {
+                                            "const": "Operation response exceeds its limit",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "code",
+                                          "message"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "code": {
+                                            "const": "total_response_too_large",
+                                            "type": "string"
+                                          },
+                                          "message": {
+                                            "const": "Batch response budget exceeded",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "code",
+                                          "message"
+                                        ],
+                                        "type": "object"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "maxLength": 64,
+                                    "minLength": 1,
+                                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                                    "type": "string"
+                                  },
+                                  "operation": {
+                                    "maxLength": 128,
+                                    "minLength": 1,
+                                    "type": "string"
+                                  },
+                                  "status": {
+                                    "const": "error",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "operation",
+                                  "status",
+                                  "error"
+                                ],
+                                "type": "object"
+                              }
+                            ]
+                          },
+                          "maxItems": 10,
+                          "minItems": 1,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "items"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Deterministic successful fixture response.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-sandbox\";q=30;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "agent_auth_pending": {
+                    "summary": "Synthetic authorization-pending OAuth response",
+                    "value": {
+                      "error": "authorization_pending",
+                      "error_description": "Authorization is still pending"
+                    }
+                  },
+                  "invalid_request": {
+                    "summary": "Strict request validation failure",
+                    "value": {
+                      "error": "invalid_request"
+                    }
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "error": {
+                          "enum": [
+                            "invalid_request",
+                            "unsupported_grant_type",
+                            "invalid_target",
+                            "invalid_grant",
+                            "authorization_pending",
+                            "slow_down",
+                            "access_denied",
+                            "expired_token",
+                            "invalid_claim_token",
+                            "claim_expired",
+                            "claimed_or_in_flight",
+                            "rate_limited",
+                            "temporarily_unavailable"
+                          ],
+                          "type": "string"
+                        },
+                        "error_description": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "error",
+                        "error_description"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SandboxRouteError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "The authorization-pending fixture response, malformed JSON, or an invalid strict request.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-sandbox\";q=30;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "request_too_large"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRouteError"
+                }
+              }
+            },
+            "description": "Request body exceeds 32768 bytes.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-sandbox\";q=30;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "unsupported_media_type"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRouteError"
+                }
+              }
+            },
+            "description": "Content-Type is not application/json with an optional UTF-8 charset.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-sandbox\";q=30;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "rate_limited"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRouteError"
+                }
+              }
+            },
+            "description": "Trusted client identity is absent or the fail-closed sandbox limiter rejected the request.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-sandbox\";q=30;w=60",
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "const": "60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "simulation_unavailable"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxRouteError"
+                }
+              }
+            },
+            "description": "Simulation response construction or validation failed.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Static draft-11 named policy. No remaining or reset state is claimed.",
+                "schema": {
+                  "const": "\"agent-sandbox\";q=30;w=60",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "const": "30",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Simulate an agent protocol response without writes"
+      }
+    },
+    "/ask": {
+      "get": {
+        "description": "NLWeb v0.55-compatible deterministic extractive answers from published documentation only. The response includes Schema.org Article citations and never reads member, authenticated, Supabase, or private data. Set streaming=true or Accept: text/event-stream for start, result, complete SSE events.",
+        "operationId": "askPublicDocs",
+        "parameters": [
+          {
+            "description": "Natural-language question. Omit every parameter to receive a capability envelope describing this endpoint instead of an answer.",
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "maxLength": 500,
+              "minLength": 2,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "top_k",
+            "schema": {
+              "default": 5,
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "streaming",
+            "schema": {
+              "enum": [
+                "true",
+                "false",
+                "1",
+                "0"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "_meta": {
+                    "mode": "list",
+                    "response_type": "answer",
+                    "site": "agentcommunity.org",
+                    "version": "0.55"
+                  },
+                  "answer": "AID: AID provides an identity and discovery record for agents.",
+                  "content": [
+                    {
+                      "@context": "https://schema.org",
+                      "@id": "https://agentcommunity.org/docs/aid",
+                      "@type": "Article",
+                      "description": "AID documentation.",
+                      "name": "AID",
+                      "url": "https://agentcommunity.org/docs/aid"
+                    }
+                  ],
+                  "query": "What is AID?"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NLWebAnswer"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "description": "SSE events named start, result, and complete only.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "NLWeb v0.55 answer or compatible event stream.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"docs-agent\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"docs-agent\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "enum": [
+                    "60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Answer questions from published documentation"
+      },
+      "post": {
+        "description": "Accepts flat parameters or an NLWeb v0.55 request with query.text, optional query.site=agentcommunity.org, prefer.streaming, and optional meta.version=0.55. Responses are deterministic and public-documents-only.",
+        "operationId": "askPublicDocsStructured",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "flat": {
+                  "value": {
+                    "query": "What is AID?",
+                    "streaming": false,
+                    "top_k": 5
+                  }
+                },
+                "structured": {
+                  "value": {
+                    "meta": {
+                      "version": "0.55"
+                    },
+                    "prefer": {
+                      "streaming": false
+                    },
+                    "query": {
+                      "site": "agentcommunity.org",
+                      "text": "What is AID?",
+                      "top_k": 5
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "query": {
+                        "maxLength": 500,
+                        "minLength": 2,
+                        "type": "string"
+                      },
+                      "streaming": {
+                        "oneOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "enum": [
+                              "true",
+                              "false",
+                              "1",
+                              "0"
+                            ],
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "top_k": {
+                        "default": 5,
+                        "maximum": 10,
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "query"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "meta": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "const": "0.55",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "prefer": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "streaming": {
+                            "type": "boolean"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "query": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "site": {
+                            "const": "agentcommunity.org",
+                            "type": "string"
+                          },
+                          "text": {
+                            "maxLength": 500,
+                            "minLength": 2,
+                            "type": "string"
+                          },
+                          "top_k": {
+                            "default": 5,
+                            "maximum": 10,
+                            "minimum": 1,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "text"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "query"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "_meta": {
+                    "mode": "list",
+                    "response_type": "answer",
+                    "site": "agentcommunity.org",
+                    "version": "0.55"
+                  },
+                  "answer": "AID: AID provides an identity and discovery record for agents.",
+                  "content": [
+                    {
+                      "@context": "https://schema.org",
+                      "@id": "https://agentcommunity.org/docs/aid",
+                      "@type": "Article",
+                      "description": "AID documentation.",
+                      "name": "AID",
+                      "url": "https://agentcommunity.org/docs/aid"
+                    }
+                  ],
+                  "query": "What is AID?"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NLWebAnswer"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "description": "SSE events named start, result, and complete only.",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "NLWeb v0.55 answer or compatible event stream.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"docs-agent\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"docs-agent\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Legacy compatibility delta-seconds field from an earlier RateLimit Internet-Draft generation. This route supplies an explicit conservative wait equal to the policy window; it is not a live countdown and is never draft-11 t.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "enum": [
+                    "60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Answer questions with an NLWeb v0.55 request"
+      }
+    },
+    "/mcp": {
+      "post": {
+        "description": "Model Context Protocol endpoint (JSON-RPC 2.0 over HTTP POST, protocol 2026-07-28, with 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05 still served; stateless, no auth). Dual-era on one endpoint, selected per request: a modern 2026-07-28 request carries a params._meta block (io.modelcontextprotocol/protocolVersion and io.modelcontextprotocol/clientCapabilities) and the standard headers below, and gets resultType, cache hints, io.modelcontextprotocol/serverInfo, and the modern error codes at their mandated HTTP statuses (-32020 header missing or mismatched and -32022 unsupported protocol revision at 400, -32601 unknown method at 404). A legacy request uses the initialize handshake, requires none of those headers, and is answered exactly as before with bare results at 200. The method initialize always selects legacy semantics; server/discover always selects modern. Tools: lookup_member, get_community_stats, register_agent, verify_certificate. Exact lookup returns only a minimal public projection; broad directory search is unsupported. The generic response policy is RateLimit-Policy: \"mcp\";q=30;w=60. Once register-specific enforcement is attempted, it is RateLimit-Policy: \"mcp-register\";q=2;w=60, even if KV is unavailable. A current RateLimit field and legacy RateLimit-Remaining are present only when the KV counter supplies a real remaining value; no t is claimed. Idempotency replays that bypass register-specific enforcement retain the generic policy. Manifest at /.well-known/mcp.",
+        "operationId": "mcpJsonRpc",
+        "parameters": [
+          {
+            "description": "Optional idempotency key honored for register_agent tool calls: the same key from the same caller IP within 24h returns the original result instead of re-registering. Replayed responses carry Idempotency-Replayed: true.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Protocol revision. An unsupported explicit value is rejected with 400; the header may be omitted, in which case 2025-03-26 is assumed per the transport spec. REQUIRED on modern 2026-07-28 requests — absent there it is -32020 at 400, and it must agree with params._meta io.modelcontextprotocol/protocolVersion or it is -32020 HeaderMismatch. Never echoed back; it is attacker-controlled.",
+            "in": "header",
+            "name": "MCP-Protocol-Version",
+            "required": false,
+            "schema": {
+              "enum": [
+                "2026-07-28",
+                "2025-11-25",
+                "2025-06-18",
+                "2025-03-26",
+                "2024-11-05"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "REQUIRED on modern 2026-07-28 requests, and must equal the JSON-RPC method in the body. Absent or disagreeing is -32020 at 400. Ignored entirely on legacy requests.",
+            "in": "header",
+            "name": "Mcp-Method",
+            "required": false,
+            "schema": {
+              "examples": [
+                "tools/list",
+                "tools/call",
+                "server/discover"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "REQUIRED on modern 2026-07-28 name-bearing methods (tools/call, resources/read, prompts/get), and must equal params.name or params.uri. Absent or disagreeing is -32020 at 400. Ignored on every other method and on all legacy requests.",
+            "in": "header",
+            "name": "Mcp-Name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Accepted at CORS preflight and then ignored, in both eras. This server is stateless: nothing reads it, and no response ever carries one. Sending it changes nothing.",
+            "in": "header",
+            "name": "Mcp-Session-Id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "id": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  },
+                  "jsonrpc": {
+                    "const": "2.0",
+                    "type": "string"
+                  },
+                  "method": {
+                    "examples": [
+                      "initialize",
+                      "tools/list",
+                      "tools/call"
+                    ],
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "jsonrpc",
+                  "method"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "JSON-RPC response.",
+            "headers": {
+              "Idempotency-Replayed": {
+                "description": "Present and set to \"true\" only when the response is a replay of a stored register_agent result for the given Idempotency-Key + caller IP.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit": {
+                "description": "Current draft-11 RateLimit Structured Field, present only when the register KV counter provides a real remaining value. r is real remaining quota; this route has no independently justified t.",
+                "schema": {
+                  "examples": [
+                    "\"mcp-register\";r=1",
+                    "\"mcp-register\";r=0"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"mcp\";q=30;w=60",
+                    "\"mcp-register\";q=2;w=60"
+                  ],
+                  "type": "string"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Legacy compatibility field present only when the register KV counter provides a real remaining value for the 2/60 mcp-register policy. It is absent when remaining is unknown and is never fabricated.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "MCP JSON-RPC notification acknowledgement. An accepted id-less notification returns HTTP 202 with an empty response body; it does not create an asynchronous REST operation, job resource, polling URL, or Location header.",
+            "x-mcp-notification-acknowledgement": true
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Modern-era protocol fault, with a JSON-RPC error body. -32020 when a required standard header (MCP-Protocol-Version, Mcp-Method, Mcp-Name) is absent or disagrees with the body; -32022 when the declared protocol revision is not served modern-style, carrying data: { supported, requested }; -32602 when a required params._meta member is missing. Legacy requests cannot produce any of these — they are answered at 200."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Origin header present and structurally invalid — malformed, the literal \"null\", or a non-http(s) scheme. JSON-RPC error body, never an HTML page, and the offending value is never echoed back. An absent or well-formed http(s) Origin is accepted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Modern-era unknown method (-32601), with a JSON-RPC error body and the usual CORS headers. Includes ping, which 2026-07-28 removed. Legacy unknown methods return -32601 at 200 instead."
+          }
+        },
+        "security": [],
+        "summary": "MCP server (streamable HTTP)"
+      }
+    },
+    "/oauth2/revoke": {
+      "post": {
+        "description": "RFC 7009-style idempotent single-token revocation. Unknown or already-revoked values return the same empty 200. This does not cancel a delegation.",
+        "operationId": "revokeAgentAccessToken",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentAccessTokenRevocation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Token processed idempotently; empty response body.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Malformed form.",
+            "headers": {}
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Present Origin was not the exact allowed origin.",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization runtime is disabled.",
+            "headers": {}
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Request body exceeds 8 KiB.",
+            "headers": {}
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Content-Type is not application/x-www-form-urlencoded with optional UTF-8 charset.",
+            "headers": {}
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Trusted-IP revoke limit rejected the request.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization service is unavailable.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Revoke one access token"
+      }
+    },
+    "/oauth2/token": {
+      "post": {
+        "description": "Strict form endpoint, 8 KiB maximum. Successful claim polls mint a fresh access-token/assertion pair each time; JWT Bearer exchange returns a fresh access token only.",
+        "operationId": "exchangeAgentAuthorizationGrant",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/ClaimTokenGrant"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AssertionGrant"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ApprovedClaimTokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AssertionExchangeResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Fresh credentials for an approved claim or valid assertion.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "OAuth error: invalid request/target/grant, pending, slow_down, denied, or expired.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Present Origin was not the exact allowed origin.",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization runtime is disabled.",
+            "headers": {}
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Request body exceeds 8 KiB.",
+            "headers": {}
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Content-Type is not application/x-www-form-urlencoded with optional UTF-8 charset.",
+            "headers": {}
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Trusted-IP token limit rejected the request.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAuthError"
+                }
+              }
+            },
+            "description": "Authorization service is unavailable.",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Legacy compatibility quota field from an earlier RateLimit Internet-Draft generation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "Current draft-11 RateLimit-Policy Structured Field. Each item starts with a quoted policy identifier; q is quota and w is the static policy window in seconds.",
+                "schema": {
+                  "examples": [
+                    "\"agent-auth-poll\";q=60;w=60"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Poll a claim or exchange a service identity assertion"
+      }
+    }
+  },
+  "security": [],
+  "servers": [
+    {
+      "url": "https://agentcommunity.org"
+    }
+  ]
+}

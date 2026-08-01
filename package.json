@@ -1,0 +1,57 @@
+{
+  "name": "@agentcommunity/cli",
+  "version": "0.1.0",
+  "description": "Official read-only command-line client for Agent Community",
+  "type": "module",
+  "bin": {
+    "agentcommunity": "./dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "contracts:check": "tsx scripts/check-contract-compat.ts",
+    "contracts:sync": "tsx scripts/sync-page-contracts.ts",
+    "lint": "eslint .",
+    "package:audit": "tsx scripts/audit-package.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": "^22.14.0 || ^24.0.0 || ^26.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agentcommunity/cli.git"
+  },
+  "homepage": "https://agentcommunity.org/developers",
+  "bugs": {
+    "url": "https://github.com/agentcommunity/cli/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/node": "^24.1.0",
+    "eslint": "^9.32.0",
+    "tsx": "^4.20.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.38.0",
+    "vitest": "^4.0.0"
+  }
+}

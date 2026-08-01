@@ -1,0 +1,40 @@
+{
+  "bundle_version": "1.0.0",
+  "contract_mode": "public",
+  "files": [
+    {
+      "bytes": 12314,
+      "media_type": "application/json",
+      "path": "auth.json",
+      "sha256": "sha256:3807637fa3579d403da7114ab454b08d9285a8fcc1286756ab1e007ee5c0e19d"
+    },
+    {
+      "bytes": 24500,
+      "media_type": "application/json",
+      "path": "batch.json",
+      "sha256": "sha256:c3922a2348c87cd35148f7ff67ac45fe2dcc857bb7e76c1ec16d9085ba458832"
+    },
+    {
+      "bytes": 42058,
+      "media_type": "application/json",
+      "path": "mcp.json",
+      "sha256": "sha256:53c6c703f1dcf2bb28a9d31287f001d9644d64900ed39edf027f77bf01640e87"
+    },
+    {
+      "bytes": 178922,
+      "media_type": "application/json",
+      "path": "openapi.json",
+      "sha256": "sha256:b671e6741e2baf9226fbfc49e3be8726e8e2b80ac0e80dfbb5d45d4d8a09cef2"
+    },
+    {
+      "bytes": 3409,
+      "media_type": "application/json",
+      "path": "rest.json",
+      "sha256": "sha256:bf4bda59ba26f185282e025b07a0ce0ce76bb8a04e55c6aa715b3fa4058e5309"
+    }
+  ],
+  "format_version": 1,
+  "openapi_version": "1.3.0",
+  "page_source": "agentcommunity-page-openapi@1.3.0",
+  "workos_auth_md_commit": "b53c9edfbfeea679b617727ebca9ba436bade794"
+}
