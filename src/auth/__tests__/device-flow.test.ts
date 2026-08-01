@@ -48,7 +48,9 @@ function errorResponse(error: string, description: string): AuthHttpResponse {
   return response(400, { error, error_description: description });
 }
 
-function harness(outcomes: Array<AuthHttpResponse | Error>, deadlineMs = 900_000) {
+type Outcome = AuthHttpResponse | Error | { response: AuthHttpResponse; advanceMs: number };
+
+function harness(outcomes: Array<Outcome>, deadlineMs = 900_000) {
   const requests: Array<AuthHttpRequest> = [];
   const events: Array<string> = [];
   const stored: Array<CredentialRecord> = [];
@@ -61,6 +63,10 @@ function harness(outcomes: Array<AuthHttpResponse | Error>, deadlineMs = 900_000
       const outcome = outcomes.shift();
       if (outcome instanceof Error) throw outcome;
       if (outcome === undefined) throw new Error("unexpected request");
+      if ("response" in outcome) {
+        monotonic += outcome.advanceMs;
+        return outcome.response;
+      }
       return outcome;
     }),
   };
@@ -169,6 +175,28 @@ describe("WorkOS service_auth login", () => {
     ], 10_000);
     await expect(flow.promise).rejects.toMatchObject({ exitCode: 4, code: "authorization_timeout" });
     expect(flow.sleeps).toEqual([5_000, 5_000]);
+    expect(flow.stored).toEqual([]);
+  });
+
+  test("bounds each poll timeout to remaining ceremony time and stores a response just before the deadline", async () => {
+    const flow = harness([
+      response(200, startBody),
+      { response: response(200, successBody), advanceMs: 4_999 },
+    ], 10_000);
+
+    await expect(flow.promise).resolves.toMatchObject({ access_token: accessToken });
+    expect(flow.requests[1]?.timeoutMs).toBe(5_000);
+    expect(flow.stored).toHaveLength(1);
+  });
+
+  test("rejects a successful poll that returns exactly at the ceremony deadline without parsing or storing it", async () => {
+    const flow = harness([
+      response(200, startBody),
+      { response: response(200, successBody), advanceMs: 5_000 },
+    ], 10_000);
+
+    await expect(flow.promise).rejects.toMatchObject({ exitCode: 4, code: "authorization_timeout" });
+    expect(flow.requests[1]?.timeoutMs).toBe(5_000);
     expect(flow.stored).toEqual([]);
   });
 

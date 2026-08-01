@@ -257,7 +257,7 @@ export async function runAuthRevoke(options: AuthNetworkOptions): Promise<AuthCo
   });
   if (response.status >= 500) unavailable();
   if (response.status === 429) rateLimited();
-  if (response.status !== 200 || response.body.byteLength !== 0) throw protocolError();
+  if (response.status !== 200) throw protocolError();
   const removed = await options.store.remove(credential);
   if (!removed) throw new CliError("credential_changed", "The local credential changed after revocation and was preserved.", 4);
   return {

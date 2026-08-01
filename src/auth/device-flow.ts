@@ -204,13 +204,14 @@ export async function runServiceAuthLogin(options: ServiceAuthLoginOptions): Pro
   while (true) {
     if (options.monotonicNow() + intervalMs > deadlineAt) throw deadlineError();
     await options.sleep(intervalMs);
-    if (options.monotonicNow() >= deadlineAt) throw deadlineError();
+    const remainingMs = deadlineAt - options.monotonicNow();
+    if (remainingMs <= 0) throw deadlineError();
     let pollResponse: AuthHttpResponse;
     try {
       pollResponse = await options.http.requestAuth({
         method: "POST",
         url: options.discovery.tokenEndpoint,
-        timeoutMs: options.timeoutMs,
+        timeoutMs: Math.min(options.timeoutMs, remainingMs),
         maxBytes: 16_384,
         headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ grant_type: CLAIM_GRANT, claim_token: start.data.claim_token }).toString(),
@@ -220,6 +221,7 @@ export async function runServiceAuthLogin(options: ServiceAuthLoginOptions): Pro
       lastPollWasUnavailable = true;
       continue;
     }
+    if (options.monotonicNow() >= deadlineAt) throw deadlineError();
     if (pollResponse.status >= 500) {
       lastPollWasUnavailable = true;
       continue;

@@ -178,6 +178,19 @@ describe("auth status, logout, and RFC 7009 revoke", () => {
   });
 
   test.each([
+    ["a non-empty JSON body", json(200, { ignored: true })],
+    ["a non-JSON invalid-UTF8 body", { status: 200, headers: { "content-type": "application/octet-stream" }, body: Uint8Array.from([0xff, 0xfe, 0xfd]) }],
+  ])("accepts bounded RFC 7009 HTTP 200 with %s and ignores the body", async (_label, accepted) => {
+    const network = httpHarness([...discoveryResponses(), accepted]);
+    const local = storeHarness();
+
+    await expect(runAuthRevoke({ http: network.http, store: local.store, timeoutMs: 10_000 }))
+      .resolves.toMatchObject({ exitCode: 0, payload: { revoked: true, credential_removed: true } });
+    expect(local.store.remove).toHaveBeenCalledWith(credential);
+    expect(local.current()).toBeNull();
+  });
+
+  test.each([
     [json(503, { error: "temporarily_unavailable" }), 6],
     [json(400, { error: "invalid_request", error_description: "The request is malformed" }), 5],
     [new Error("timeout containing current-access-token-fixture-only"), 6],

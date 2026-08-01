@@ -14,6 +14,7 @@ const STORE_DIRECTORY = "agentcommunity";
 const DIRECTORY_MODE = 0o700;
 const FILE_MODE = 0o600;
 const MAX_CREDENTIAL_BYTES = 32_768;
+const TASK_TEMP_FILE_PATTERN = /^\.credentials\.json\.tmp-(?:0|[1-9]\d{0,19})-[A-Za-z0-9_-]{1,64}$/;
 const DEFAULT_LOCK_TIMEOUT_MS = 2_000;
 const DEFAULT_STALE_LOCK_MS = 5 * 60 * 1_000;
 const LOCK_POLL_MS = 50;
@@ -176,18 +177,17 @@ export class PosixCredentialStore {
   async remove(expected?: CredentialRecord): Promise<boolean> {
     const directory = await this.ensureDirectory(false);
     if (directory === null) return false;
-    const before = await this.safeLstat(this.path);
-    if (before === null) return false;
-    this.requireSafeFile(before);
     return this.withLock(directory, async () => {
       const current = await this.safeLstat(this.path);
       if (current === null) return false;
       this.requireSafeFile(current);
-      if (current.dev !== before.dev || current.ino !== before.ino) return false;
       if (expected !== undefined) {
         const record = await this.readCredentialFile();
         if (record === null || JSON.stringify(record) !== JSON.stringify(expected)) return false;
       }
+      const final = await this.safeLstat(this.path);
+      if (final === null || final.dev !== current.dev || final.ino !== current.ino) return false;
+      this.requireSafeFile(final);
       await this.fs.unlink(this.path);
       await this.syncDirectory(directory);
       return true;
@@ -216,9 +216,43 @@ export class PosixCredentialStore {
     }
   }
 
+  private requireSafeAncestor(stat: Awaited<ReturnType<typeof fsPromises.lstat>>): void {
+    if (!stat.isDirectory() || stat.isSymbolicLink() || (Number(stat.mode) & 0o022) !== 0) throw storeError();
+  }
+
+  private async validateAncestorChain(path: string): Promise<void> {
+    const ancestors: Array<string> = [];
+    let current = requireAbsoluteRoot(path);
+    while (true) {
+      ancestors.unshift(current);
+      const parent = dirname(current);
+      if (parent === current) break;
+      current = parent;
+    }
+    for (const ancestor of ancestors) {
+      const before = await this.safeLstat(ancestor);
+      if (before === null) return;
+      this.requireSafeAncestor(before);
+      let handle: Awaited<ReturnType<typeof fsPromises.open>>;
+      try {
+        handle = await this.fs.open(ancestor, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      } catch {
+        throw storeError();
+      }
+      try {
+        const opened = await handle.stat();
+        this.requireSafeAncestor(opened);
+        if (opened.dev !== before.dev || opened.ino !== before.ino) throw storeError();
+      } finally {
+        await handle.close();
+      }
+    }
+  }
+
   private async ensureDirectory(create: boolean): Promise<string | null> {
     const plan = pathPlan(this.options);
     let current = plan.base;
+    await this.validateAncestorChain(current);
     let baseStat = await this.safeLstat(current);
     if (baseStat === null) {
       if (!create || current !== requireAbsoluteRoot(this.options.xdgConfigHome ?? this.options.homeDirectory)) return null;
@@ -232,6 +266,7 @@ export class PosixCredentialStore {
         if (errorCode(error) !== "EEXIST") throw storeError();
       }
       baseStat = await this.safeLstat(current);
+      await this.validateAncestorChain(current);
     }
     if (baseStat === null) return null;
     this.requireSafeDirectory(baseStat, false);
@@ -251,6 +286,7 @@ export class PosixCredentialStore {
       this.requireSafeDirectory(stat, index === plan.segments.length - 1);
     }
     if (current !== dirname(this.path)) throw storeError();
+    await this.validateAncestorChain(current);
     return current;
   }
 
@@ -331,6 +367,7 @@ export class PosixCredentialStore {
       }
     }
     try {
+      await this.cleanupTaskTempFiles(directory);
       return await operation();
     } finally {
       await lockHandle.close().catch(() => undefined);
@@ -342,6 +379,44 @@ export class PosixCredentialStore {
         }
       }
     }
+  }
+
+  private async cleanupTaskTempFiles(directory: string): Promise<void> {
+    let names: Array<string>;
+    try {
+      names = await this.fs.readdir(directory);
+    } catch {
+      throw storeError();
+    }
+    let removed = false;
+    for (const name of names) {
+      if (!TASK_TEMP_FILE_PATTERN.test(name)) continue;
+      const path = join(directory, name);
+      const before = await this.safeLstat(path);
+      if (before === null) continue;
+      this.requireSafeFile(before);
+      if (before.size > MAX_CREDENTIAL_BYTES) throw storeError();
+      let handle: Awaited<ReturnType<typeof fsPromises.open>>;
+      try {
+        handle = await this.fs.open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+      } catch {
+        throw storeError();
+      }
+      try {
+        const opened = await handle.stat();
+        this.requireSafeFile(opened);
+        if (opened.dev !== before.dev || opened.ino !== before.ino || opened.size > MAX_CREDENTIAL_BYTES) throw storeError();
+        const final = await this.safeLstat(path);
+        if (final === null || final.dev !== opened.dev || final.ino !== opened.ino) throw storeError();
+        this.requireSafeFile(final);
+        if (final.size > MAX_CREDENTIAL_BYTES) throw storeError();
+        await this.fs.unlink(path);
+        removed = true;
+      } finally {
+        await handle.close();
+      }
+    }
+    if (removed) await this.syncDirectory(directory);
   }
 
   private async considerStaleLock(lockPath: string): Promise<void> {
