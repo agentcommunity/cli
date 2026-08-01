@@ -1,0 +1,1286 @@
+{
+  "advertised_revision": "2026-07-28",
+  "docs_tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Search only published Agent Community documentation. Does not search members, registrations, private lists, or authenticated data.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 5,
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "query": {
+            "maxLength": 300,
+            "minLength": 2,
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "search_docs",
+      "outputSchema": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "maximum": 10,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "results": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "excerpt": {
+                      "maxLength": 320,
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "format": "uri",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "description",
+                    "path",
+                    "url",
+                    "excerpt"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 10,
+                "type": "array"
+              }
+            },
+            "required": [
+              "results",
+              "count"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "error": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "enum": [
+                      "invalid_arguments",
+                      "unknown_tool",
+                      "document_not_found"
+                    ],
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "error"
+            ],
+            "type": "object"
+          }
+        ],
+        "type": "object"
+      },
+      "title": "Search Agent Community documentation"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Read one published Agent Community documentation path as Markdown. Allowed paths are /developers, /docs, and /docs/*.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "get_doc",
+      "outputSchema": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "markdown": {
+                "maxLength": 100000,
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "format": "uri",
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "url",
+              "markdown"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "error": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "enum": [
+                      "invalid_arguments",
+                      "unknown_tool",
+                      "document_not_found"
+                    ],
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "error"
+            ],
+            "type": "object"
+          }
+        ],
+        "type": "object"
+      },
+      "title": "Read an Agent Community document"
+    }
+  ],
+  "fixtures": {
+    "legacy_parameter_exceptions": [
+      {
+        "behavior": "initialize with an empty params object is invalid",
+        "direction": "rejects_previously_accepted",
+        "endpoint": "/mcp",
+        "request": {
+          "body": {
+            "id": "fixture-product-legacy",
+            "jsonrpc": "2.0",
+            "method": "initialize",
+            "params": {}
+          },
+          "headers": {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          }
+        },
+        "response": {
+          "body": {
+            "error": {
+              "code": -32602,
+              "message": "Invalid params"
+            },
+            "id": "fixture-product-legacy",
+            "jsonrpc": "2.0"
+          },
+          "http_status": 200
+        }
+      },
+      {
+        "behavior": "legacy tools/list normalizes an array params value to an empty object",
+        "direction": "accepts_previously_rejected",
+        "endpoint": "/mcp/docs",
+        "request": {
+          "body": {
+            "id": "fixture-docs-legacy",
+            "jsonrpc": "2.0",
+            "method": "tools/list",
+            "params": []
+          },
+          "headers": {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          }
+        },
+        "response": {
+          "body": {
+            "id": "fixture-docs-legacy",
+            "jsonrpc": "2.0",
+            "result": {
+              "tools": [
+                {
+                  "annotations": {
+                    "destructiveHint": false,
+                    "idempotentHint": true,
+                    "openWorldHint": false,
+                    "readOnlyHint": true
+                  },
+                  "description": "Search only published Agent Community documentation. Does not search members, registrations, private lists, or authenticated data.",
+                  "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "limit": {
+                        "default": 5,
+                        "maximum": 10,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "query": {
+                        "maxLength": 300,
+                        "minLength": 2,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "query"
+                    ],
+                    "type": "object"
+                  },
+                  "name": "search_docs",
+                  "outputSchema": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "count": {
+                            "maximum": 10,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "results": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "description": {
+                                  "type": "string"
+                                },
+                                "excerpt": {
+                                  "maxLength": 320,
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "url": {
+                                  "format": "uri",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "description",
+                                "path",
+                                "url",
+                                "excerpt"
+                              ],
+                              "type": "object"
+                            },
+                            "maxItems": 10,
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "results",
+                          "count"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "error": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "code": {
+                                "enum": [
+                                  "invalid_arguments",
+                                  "unknown_tool",
+                                  "document_not_found"
+                                ],
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "message"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "error"
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "type": "object"
+                  },
+                  "title": "Search Agent Community documentation"
+                },
+                {
+                  "annotations": {
+                    "destructiveHint": false,
+                    "idempotentHint": true,
+                    "openWorldHint": false,
+                    "readOnlyHint": true
+                  },
+                  "description": "Read one published Agent Community documentation path as Markdown. Allowed paths are /developers, /docs, and /docs/*.",
+                  "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "maxLength": 300,
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "type": "object"
+                  },
+                  "name": "get_doc",
+                  "outputSchema": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "markdown": {
+                            "maxLength": 100000,
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "format": "uri",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "title",
+                          "url",
+                          "markdown"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "error": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "code": {
+                                "enum": [
+                                  "invalid_arguments",
+                                  "unknown_tool",
+                                  "document_not_found"
+                                ],
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "message"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "error"
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "type": "object"
+                  },
+                  "title": "Read an Agent Community document"
+                }
+              ]
+            }
+          },
+          "http_status": 200
+        }
+      }
+    ],
+    "modern": {
+      "tool_calls": [
+        {
+          "request": {
+            "body": {
+              "id": "fixture-member-call",
+              "jsonrpc": "2.0",
+              "method": "tools/call",
+              "params": {
+                "_meta": {
+                  "io.modelcontextprotocol/clientCapabilities": {},
+                  "io.modelcontextprotocol/clientInfo": {
+                    "name": "@agentcommunity/cli",
+                    "version": "0.0.0-fixture"
+                  },
+                  "io.modelcontextprotocol/protocolVersion": "2026-07-28"
+                },
+                "arguments": {
+                  "query": "fixture-member"
+                },
+                "name": "lookup_member"
+              }
+            },
+            "endpoint": "/mcp",
+            "headers": {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "MCP-Protocol-Version": "2026-07-28",
+              "Mcp-Method": "tools/call",
+              "Mcp-Name": "lookup_member"
+            }
+          },
+          "response": {
+            "body": {
+              "id": "fixture-member-call",
+              "jsonrpc": "2.0",
+              "result": {
+                "_meta": {
+                  "io.modelcontextprotocol/serverInfo": {
+                    "icons": [
+                      {
+                        "mimeType": "image/png",
+                        "sizes": [
+                          "180x180"
+                        ],
+                        "src": "https://agentcommunity.org/apple-touch-icon.png"
+                      }
+                    ],
+                    "name": "agentcommunity",
+                    "title": "Agent Community",
+                    "version": "1.0.0",
+                    "websiteUrl": "https://agentcommunity.org"
+                  }
+                },
+                "content": [
+                  {
+                    "text": "{\"status\":\"member\",\"matches\":[{\"display_name\":\"[fixture] Member\",\"member_since\":null,\"profile_url\":\"https://agentcommunity.org/m/fixture-member\"}]}",
+                    "type": "text"
+                  }
+                ],
+                "resultType": "complete",
+                "structuredContent": {
+                  "matches": [
+                    {
+                      "display_name": "[fixture] Member",
+                      "member_since": null,
+                      "profile_url": "https://agentcommunity.org/m/fixture-member"
+                    }
+                  ],
+                  "status": "member"
+                }
+              }
+            },
+            "http_status": 200
+          },
+          "tool": "lookup_member"
+        },
+        {
+          "request": {
+            "body": {
+              "id": "fixture-stats-call",
+              "jsonrpc": "2.0",
+              "method": "tools/call",
+              "params": {
+                "_meta": {
+                  "io.modelcontextprotocol/clientCapabilities": {},
+                  "io.modelcontextprotocol/clientInfo": {
+                    "name": "@agentcommunity/cli",
+                    "version": "0.0.0-fixture"
+                  },
+                  "io.modelcontextprotocol/protocolVersion": "2026-07-28"
+                },
+                "arguments": {},
+                "name": "get_community_stats"
+              }
+            },
+            "endpoint": "/mcp",
+            "headers": {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "MCP-Protocol-Version": "2026-07-28",
+              "Mcp-Method": "tools/call",
+              "Mcp-Name": "get_community_stats"
+            }
+          },
+          "response": {
+            "body": {
+              "id": "fixture-stats-call",
+              "jsonrpc": "2.0",
+              "result": {
+                "_meta": {
+                  "io.modelcontextprotocol/serverInfo": {
+                    "icons": [
+                      {
+                        "mimeType": "image/png",
+                        "sizes": [
+                          "180x180"
+                        ],
+                        "src": "https://agentcommunity.org/apple-touch-icon.png"
+                      }
+                    ],
+                    "name": "agentcommunity",
+                    "title": "Agent Community",
+                    "version": "1.0.0",
+                    "websiteUrl": "https://agentcommunity.org"
+                  }
+                },
+                "content": [
+                  {
+                    "text": "{\"member_count\":0,\"note\":\"Fixture-only value; not production member-count evidence.\"}",
+                    "type": "text"
+                  }
+                ],
+                "resultType": "complete",
+                "structuredContent": {
+                  "member_count": 0,
+                  "note": "Fixture-only value; not production member-count evidence."
+                }
+              }
+            },
+            "http_status": 200
+          },
+          "tool": "get_community_stats"
+        },
+        {
+          "request": {
+            "body": {
+              "id": "fixture-certificate-call",
+              "jsonrpc": "2.0",
+              "method": "tools/call",
+              "params": {
+                "_meta": {
+                  "io.modelcontextprotocol/clientCapabilities": {},
+                  "io.modelcontextprotocol/clientInfo": {
+                    "name": "@agentcommunity/cli",
+                    "version": "0.0.0-fixture"
+                  },
+                  "io.modelcontextprotocol/protocolVersion": "2026-07-28"
+                },
+                "arguments": {
+                  "certificate_id": "FIXTURE-NOT-A-CERTIFICATE"
+                },
+                "name": "verify_certificate"
+              }
+            },
+            "endpoint": "/mcp",
+            "headers": {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "MCP-Protocol-Version": "2026-07-28",
+              "Mcp-Method": "tools/call",
+              "Mcp-Name": "verify_certificate"
+            }
+          },
+          "response": {
+            "body": {
+              "id": "fixture-certificate-call",
+              "jsonrpc": "2.0",
+              "result": {
+                "_meta": {
+                  "io.modelcontextprotocol/serverInfo": {
+                    "icons": [
+                      {
+                        "mimeType": "image/png",
+                        "sizes": [
+                          "180x180"
+                        ],
+                        "src": "https://agentcommunity.org/apple-touch-icon.png"
+                      }
+                    ],
+                    "name": "agentcommunity",
+                    "title": "Agent Community",
+                    "version": "1.0.0",
+                    "websiteUrl": "https://agentcommunity.org"
+                  }
+                },
+                "content": [
+                  {
+                    "text": "{\"certificate_id\":\"FIXTURE-NOT-A-CERTIFICATE\",\"status\":\"invalid_format\",\"valid_format\":false,\"issued\":false,\"agent_name\":null,\"certificate_url\":null}",
+                    "type": "text"
+                  }
+                ],
+                "resultType": "complete",
+                "structuredContent": {
+                  "agent_name": null,
+                  "certificate_id": "FIXTURE-NOT-A-CERTIFICATE",
+                  "certificate_url": null,
+                  "issued": false,
+                  "status": "invalid_format",
+                  "valid_format": false
+                }
+              }
+            },
+            "http_status": 200
+          },
+          "tool": "verify_certificate"
+        }
+      ],
+      "tools_list": {
+        "request": {
+          "body": {
+            "id": "fixture-tools-list",
+            "jsonrpc": "2.0",
+            "method": "tools/list",
+            "params": {
+              "_meta": {
+                "io.modelcontextprotocol/clientCapabilities": {},
+                "io.modelcontextprotocol/clientInfo": {
+                  "name": "@agentcommunity/cli",
+                  "version": "0.0.0-fixture"
+                },
+                "io.modelcontextprotocol/protocolVersion": "2026-07-28"
+              }
+            }
+          },
+          "endpoint": "/mcp",
+          "headers": {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "MCP-Protocol-Version": "2026-07-28",
+            "Mcp-Method": "tools/list"
+          }
+        },
+        "response": {
+          "body": {
+            "id": "fixture-tools-list",
+            "jsonrpc": "2.0",
+            "result": {
+              "_meta": {
+                "io.modelcontextprotocol/serverInfo": {
+                  "icons": [
+                    {
+                      "mimeType": "image/png",
+                      "sizes": [
+                        "180x180"
+                      ],
+                      "src": "https://agentcommunity.org/apple-touch-icon.png"
+                    }
+                  ],
+                  "name": "agentcommunity",
+                  "title": "Agent Community",
+                  "version": "1.0.0",
+                  "websiteUrl": "https://agentcommunity.org"
+                }
+              },
+              "cacheScope": "public",
+              "resultType": "complete",
+              "tools": [
+                {
+                  "annotations": {
+                    "destructiveHint": false,
+                    "openWorldHint": false,
+                    "readOnlyHint": true
+                  },
+                  "description": "Look up one public member by exact display name or slug. This is not free-text directory search and returns only minimal public information.",
+                  "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "query": {
+                        "description": "Exact display name or slug; not free-text search.",
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "query"
+                    ],
+                    "type": "object"
+                  },
+                  "name": "lookup_member",
+                  "outputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "matches": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "display_name": {
+                              "type": "string"
+                            },
+                            "member_since": {
+                              "format": "date",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "profile_url": {
+                              "format": "uri",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "display_name",
+                            "member_since",
+                            "profile_url"
+                          ],
+                          "type": "object"
+                        },
+                        "maxItems": 5,
+                        "type": "array"
+                      },
+                      "status": {
+                        "enum": [
+                          "member",
+                          "not_found",
+                          "ambiguous"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "matches"
+                    ],
+                    "type": "object"
+                  },
+                  "title": "Look up member"
+                },
+                {
+                  "_meta": {
+                    "ui": {
+                      "resourceUri": "ui://agentcommunity/community-stats.html"
+                    },
+                    "ui/resourceUri": "ui://agentcommunity/community-stats.html"
+                  },
+                  "annotations": {
+                    "destructiveHint": false,
+                    "openWorldHint": false,
+                    "readOnlyHint": true
+                  },
+                  "description": "Get the roughly-live Agent Community member count. The count is cached for up to 20 minutes.",
+                  "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {},
+                    "type": "object"
+                  },
+                  "name": "get_community_stats",
+                  "outputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "member_count": {
+                        "type": "integer"
+                      },
+                      "note": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "member_count",
+                      "note"
+                    ],
+                    "type": "object"
+                  },
+                  "title": "Get community stats"
+                },
+                {
+                  "annotations": {
+                    "destructiveHint": true,
+                    "idempotentHint": false,
+                    "openWorldHint": true,
+                    "readOnlyHint": false
+                  },
+                  "description": "Pre-register a .agent identity through the DMV. This is free and non-binding, does not confer domain ownership, and should run only after an explicit user request.",
+                  "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "agent_name": {
+                        "description": "Desired name without the .agent suffix.",
+                        "maxLength": 63,
+                        "minLength": 3,
+                        "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$",
+                        "type": "string"
+                      },
+                      "description": {
+                        "description": "Optional description.",
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      "email": {
+                        "description": "Email address for confirmation.",
+                        "format": "email",
+                        "type": "string"
+                      },
+                      "operator_name": {
+                        "description": "Person or organization operating the agent.",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "agent_name",
+                      "email",
+                      "operator_name"
+                    ],
+                    "type": "object"
+                  },
+                  "name": "register_agent",
+                  "outputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "agent_name": {
+                        "type": "string"
+                      },
+                      "already_recorded": {
+                        "type": "boolean"
+                      },
+                      "badge_card_url": {
+                        "format": "uri",
+                        "type": "string"
+                      },
+                      "badge_url": {
+                        "format": "uri",
+                        "type": "string"
+                      },
+                      "certificate_id": {
+                        "type": "string"
+                      },
+                      "domain": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "permalink_url": {
+                        "format": "uri",
+                        "type": "string"
+                      },
+                      "registration_type": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "certificate_id",
+                      "agent_name",
+                      "domain",
+                      "registration_type",
+                      "permalink_url",
+                      "badge_url",
+                      "badge_card_url",
+                      "message"
+                    ],
+                    "type": "object"
+                  },
+                  "title": "Pre-register .agent name"
+                },
+                {
+                  "annotations": {
+                    "destructiveHint": false,
+                    "openWorldHint": false,
+                    "readOnlyHint": true
+                  },
+                  "description": "Verify the live DMV issuance state of a canonical certificate ID. This does not confer domain ownership or mean the .agent TLD exists in DNS.",
+                  "inputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "certificate_id": {
+                        "description": "Certificate ID, e.g. MESA-DD6-660J.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "certificate_id"
+                    ],
+                    "type": "object"
+                  },
+                  "name": "verify_certificate",
+                  "outputSchema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "agent_name": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "certificate_id": {
+                        "type": "string"
+                      },
+                      "certificate_url": {
+                        "format": "uri",
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "issued": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "invalid_format",
+                          "not_found",
+                          "issued",
+                          "unavailable"
+                        ],
+                        "type": "string"
+                      },
+                      "valid_format": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "certificate_id",
+                      "status",
+                      "valid_format",
+                      "issued",
+                      "agent_name",
+                      "certificate_url"
+                    ],
+                    "type": "object"
+                  },
+                  "title": "Verify DMV certificate"
+                }
+              ],
+              "ttlMs": 300000
+            }
+          },
+          "http_status": 200
+        }
+      }
+    }
+  },
+  "product_tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Look up one public member by exact display name or slug. This is not free-text directory search and returns only minimal public information.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "description": "Exact display name or slug; not free-text search.",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "lookup_member",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "matches": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "display_name": {
+                  "type": "string"
+                },
+                "member_since": {
+                  "format": "date",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "profile_url": {
+                  "format": "uri",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "display_name",
+                "member_since",
+                "profile_url"
+              ],
+              "type": "object"
+            },
+            "maxItems": 5,
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "member",
+              "not_found",
+              "ambiguous"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "matches"
+        ],
+        "type": "object"
+      },
+      "title": "Look up member"
+    },
+    {
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://agentcommunity/community-stats.html"
+        },
+        "ui/resourceUri": "ui://agentcommunity/community-stats.html"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Get the roughly-live Agent Community member count. The count is cached for up to 20 minutes.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_community_stats",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "member_count": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "member_count",
+          "note"
+        ],
+        "type": "object"
+      },
+      "title": "Get community stats"
+    },
+    {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false
+      },
+      "description": "Pre-register a .agent identity through the DMV. This is free and non-binding, does not confer domain ownership, and should run only after an explicit user request.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_name": {
+            "description": "Desired name without the .agent suffix.",
+            "maxLength": 63,
+            "minLength": 3,
+            "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$",
+            "type": "string"
+          },
+          "description": {
+            "description": "Optional description.",
+            "maxLength": 500,
+            "type": "string"
+          },
+          "email": {
+            "description": "Email address for confirmation.",
+            "format": "email",
+            "type": "string"
+          },
+          "operator_name": {
+            "description": "Person or organization operating the agent.",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_name",
+          "email",
+          "operator_name"
+        ],
+        "type": "object"
+      },
+      "name": "register_agent",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_name": {
+            "type": "string"
+          },
+          "already_recorded": {
+            "type": "boolean"
+          },
+          "badge_card_url": {
+            "format": "uri",
+            "type": "string"
+          },
+          "badge_url": {
+            "format": "uri",
+            "type": "string"
+          },
+          "certificate_id": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "permalink_url": {
+            "format": "uri",
+            "type": "string"
+          },
+          "registration_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "certificate_id",
+          "agent_name",
+          "domain",
+          "registration_type",
+          "permalink_url",
+          "badge_url",
+          "badge_card_url",
+          "message"
+        ],
+        "type": "object"
+      },
+      "title": "Pre-register .agent name"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Verify the live DMV issuance state of a canonical certificate ID. This does not confer domain ownership or mean the .agent TLD exists in DNS.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "certificate_id": {
+            "description": "Certificate ID, e.g. MESA-DD6-660J.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "certificate_id"
+        ],
+        "type": "object"
+      },
+      "name": "verify_certificate",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "certificate_id": {
+            "type": "string"
+          },
+          "certificate_url": {
+            "format": "uri",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "issued": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "invalid_format",
+              "not_found",
+              "issued",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "valid_format": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "certificate_id",
+          "status",
+          "valid_format",
+          "issued",
+          "agent_name",
+          "certificate_url"
+        ],
+        "type": "object"
+      },
+      "title": "Verify DMV certificate"
+    }
+  ],
+  "supported_revisions": [
+    "2026-07-28",
+    "2025-11-25",
+    "2025-06-18",
+    "2025-03-26",
+    "2024-11-05"
+  ]
+}

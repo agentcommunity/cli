@@ -1,0 +1,800 @@
+{
+  "constants": {
+    "content_list_max_response_bytes": 262144,
+    "docs_ask_max_response_bytes": 65536,
+    "execution": "sequential_concurrency_1",
+    "max_duration_ms": 10000,
+    "max_id_chars": 64,
+    "max_items": 10,
+    "max_operation_chars": 128,
+    "max_request_bytes": 262144,
+    "max_total_cost": 10,
+    "max_total_response_bytes": 1048576,
+    "operations": [
+      "content.list",
+      "docs.ask"
+    ]
+  },
+  "fixtures": {
+    "deadline_error": {
+      "response": {
+        "body": {
+          "items": [
+            {
+              "error": {
+                "code": "deadline_exceeded",
+                "message": "Batch deadline exceeded"
+              },
+              "id": "fixture-deadline",
+              "operation": "docs.ask",
+              "status": "error"
+            }
+          ]
+        },
+        "http_status": 200
+      }
+    },
+    "envelope_errors": [
+      {
+        "body": {
+          "error": {
+            "code": "invalid_json",
+            "message": "Invalid JSON request body"
+          }
+        },
+        "http_status": 400,
+        "name": "invalid_json"
+      },
+      {
+        "body": {
+          "error": {
+            "code": "invalid_request",
+            "message": "Invalid batch request"
+          }
+        },
+        "http_status": 400,
+        "name": "invalid_request"
+      },
+      {
+        "body": {
+          "error": {
+            "code": "request_too_large",
+            "message": "Batch request exceeds 262144 bytes"
+          }
+        },
+        "http_status": 413,
+        "name": "request_too_large"
+      },
+      {
+        "body": {
+          "error": {
+            "code": "unsupported_media_type",
+            "message": "Content-Type must be application/json"
+          }
+        },
+        "http_status": 415,
+        "name": "unsupported_media_type"
+      },
+      {
+        "body": {
+          "error": {
+            "code": "rate_limited",
+            "message": "Too many batch requests"
+          }
+        },
+        "http_status": 429,
+        "name": "rate_limited"
+      },
+      {
+        "body": {
+          "error": {
+            "code": "internal_error",
+            "message": "Batch execution failed"
+          }
+        },
+        "http_status": 500,
+        "name": "internal_error"
+      }
+    ],
+    "mixed_ordered_result": {
+      "request": {
+        "body": {
+          "items": [
+            {
+              "arguments": {
+                "limit": 5,
+                "query": "agent discovery",
+                "type": "docs"
+              },
+              "id": "content-1",
+              "operation": "content.list"
+            },
+            {
+              "arguments": {
+                "query": "How can agents discover AgentCommunity resources?",
+                "top_k": 3
+              },
+              "id": "docs-1",
+              "operation": "docs.ask"
+            }
+          ]
+        },
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/v1/batch"
+      },
+      "response": {
+        "body": {
+          "items": [
+            {
+              "id": "sandbox-content",
+              "operation": "content.list",
+              "result": {
+                "items": [
+                  {
+                    "description": "Synthetic fixture; no production content or member data.",
+                    "href": "/sandbox/fixtures/content",
+                    "title": "[sandbox fixture] Published content",
+                    "type": "page"
+                  }
+                ],
+                "page": {
+                  "has_more": false,
+                  "limit": 1,
+                  "next_cursor": null
+                }
+              },
+              "status": "ok"
+            },
+            {
+              "error": {
+                "code": "unknown_operation",
+                "message": "Unsupported operation"
+              },
+              "id": "sandbox-unknown",
+              "operation": "sandbox.unknown",
+              "status": "error"
+            }
+          ]
+        },
+        "http_status": 200
+      }
+    },
+    "rate_limit": {
+      "body": {
+        "error": {
+          "code": "rate_limited",
+          "message": "Too many batch requests"
+        }
+      },
+      "headers": {
+        "RateLimit-Policy": "\"agent-batch\";q=10;w=60",
+        "Retry-After": "60"
+      },
+      "http_status": 429
+    }
+  },
+  "schemas": {
+    "known_item": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "arguments": {
+              "additionalProperties": false,
+              "properties": {
+                "cursor": {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                "limit": {
+                  "default": 20,
+                  "maximum": 50,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "query": {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                "type": {
+                  "enum": [
+                    "docs",
+                    "blog",
+                    "page"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "id": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+              "type": "string"
+            },
+            "operation": {
+              "const": "content.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "operation",
+            "arguments"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "arguments": {
+              "additionalProperties": false,
+              "properties": {
+                "query": {
+                  "maxLength": 500,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                "top_k": {
+                  "default": 5,
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query"
+              ],
+              "type": "object"
+            },
+            "id": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+              "type": "string"
+            },
+            "operation": {
+              "const": "docs.ask",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "operation",
+            "arguments"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "request": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "arguments": {},
+              "id": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                "type": "string"
+              },
+              "operation": {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "operation",
+              "arguments"
+            ],
+            "type": "object"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "response": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "maxLength": 64,
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                        "type": "string"
+                      },
+                      "operation": {
+                        "const": "content.list",
+                        "type": "string"
+                      },
+                      "result": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "items": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "description": {
+                                  "type": "string"
+                                },
+                                "href": {
+                                  "pattern": "^\\/(?!\\/)",
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "enum": [
+                                    "docs",
+                                    "blog",
+                                    "page"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "description",
+                                "href",
+                                "type"
+                              ],
+                              "type": "object"
+                            },
+                            "maxItems": 50,
+                            "type": "array"
+                          },
+                          "page": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "has_more": {
+                                "type": "boolean"
+                              },
+                              "limit": {
+                                "maximum": 50,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "next_cursor": {
+                                "anyOf": [
+                                  {
+                                    "maxLength": 256,
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "limit",
+                              "next_cursor",
+                              "has_more"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "items",
+                          "page"
+                        ],
+                        "type": "object"
+                      },
+                      "status": {
+                        "const": "ok",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "operation",
+                      "status",
+                      "result"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "maxLength": 64,
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                        "type": "string"
+                      },
+                      "operation": {
+                        "const": "docs.ask",
+                        "type": "string"
+                      },
+                      "result": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "answer": {
+                            "maxLength": 1500,
+                            "type": "string"
+                          },
+                          "query": {
+                            "maxLength": 500,
+                            "type": "string"
+                          },
+                          "sources": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "description": {
+                                  "maxLength": 500,
+                                  "type": "string"
+                                },
+                                "excerpt": {
+                                  "maxLength": 320,
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "pattern": "^\\/(?!\\/)",
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "maxLength": 200,
+                                  "type": "string"
+                                },
+                                "url": {
+                                  "format": "uri",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "description",
+                                "path",
+                                "url",
+                                "excerpt"
+                              ],
+                              "type": "object"
+                            },
+                            "maxItems": 10,
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "query",
+                          "answer",
+                          "sources"
+                        ],
+                        "type": "object"
+                      },
+                      "status": {
+                        "const": "ok",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "operation",
+                      "status",
+                      "result"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "error": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "const": "unknown_operation",
+                            "type": "string"
+                          },
+                          "message": {
+                            "const": "Unsupported operation",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "const": "invalid_arguments",
+                            "type": "string"
+                          },
+                          "message": {
+                            "const": "Invalid arguments",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "const": "operation_failed",
+                            "type": "string"
+                          },
+                          "message": {
+                            "const": "Operation failed",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "const": "deadline_exceeded",
+                            "type": "string"
+                          },
+                          "message": {
+                            "const": "Batch deadline exceeded",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "const": "response_too_large",
+                            "type": "string"
+                          },
+                          "message": {
+                            "const": "Operation response exceeds its limit",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "const": "total_response_too_large",
+                            "type": "string"
+                          },
+                          "message": {
+                            "const": "Batch response budget exceeded",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "id": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                    "type": "string"
+                  },
+                  "operation": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "status": {
+                    "const": "error",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "operation",
+                  "status",
+                  "error"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "route_error": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "const": "invalid_json",
+                  "type": "string"
+                },
+                "message": {
+                  "const": "Invalid JSON request body",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "const": "invalid_request",
+                  "type": "string"
+                },
+                "message": {
+                  "const": "Invalid batch request",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "const": "request_too_large",
+                  "type": "string"
+                },
+                "message": {
+                  "const": "Batch request exceeds 262144 bytes",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "const": "unsupported_media_type",
+                  "type": "string"
+                },
+                "message": {
+                  "const": "Content-Type must be application/json",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "const": "rate_limited",
+                  "type": "string"
+                },
+                "message": {
+                  "const": "Too many batch requests",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "const": "internal_error",
+                  "type": "string"
+                },
+                "message": {
+                  "const": "Batch execution failed",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "type": "object"
+    }
+  },
+  "valid_items": [
+    {
+      "arguments": {
+        "limit": 5,
+        "query": "agent discovery",
+        "type": "docs"
+      },
+      "id": "content-1",
+      "operation": "content.list"
+    },
+    {
+      "arguments": {
+        "query": "How can agents discover AgentCommunity resources?",
+        "top_k": 3
+      },
+      "id": "docs-1",
+      "operation": "docs.ask"
+    }
+  ]
+}

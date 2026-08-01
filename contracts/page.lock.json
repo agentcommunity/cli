@@ -1,0 +1,6 @@
+{
+  "bundle_version": "1.0.0",
+  "compatible_range": "^1.0.0",
+  "manifest_url": "https://agentcommunity.org/.well-known/agentcommunity-contracts/1.0.0/manifest.json",
+  "manifest_sha256": "sha256:b1f10b6288e436ccdca282b88a9a9115fcc0f6716f90731aab1455175b535595"
+}
