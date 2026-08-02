@@ -35,7 +35,7 @@ npm run contracts:check
 npm run package:audit
 ```
 
-The final package audit must inspect the exact tarball allowlist and metadata, scan packed files for likely secrets, install that tarball in a clean temporary project, and run `npx --no-install agentcommunity --help`. CI covers Node 22.14, 24, and 26 on Ubuntu 24.04 and macOS.
+The final package audit must inspect the exact tarball allowlist and packed manifest, require `bin.agentcommunity` to remain exactly `dist/cli.js`, scan packed files for likely secrets, install that tarball in a clean temporary project, prove the installed `.bin/agentcommunity` shim resolves to the packed executable, and run that exact shim. CI covers Node 22.14, 24, and 26 on Ubuntu 24.04 and macOS.
 
 ## Security and release gates
 
@@ -45,4 +45,4 @@ Auth discovery always starts from an unauthenticated exact `/api` challenge and 
 
 The credential store is POSIX-only. Require user-owned non-symlink `0700` directories and user-owned regular single-link `0600` files; reject unsafe parents, modes, owners, symlinks, hardlinks, and locks. Preserve bounded locking, conservative stale-lock checks, same-directory exclusive/no-follow temp creation, fsync-before-rename, atomic rename, directory fsync, conditional refresh/removal, and cleanup on interruption.
 
-There is intentionally no `release.yml`. Do not publish, push, deploy, create credentials, run live auth, or add OIDC permissions without explicit owner authorization. Keep these states distinct in docs and reports: source complete, npm package published, PAGE endpoint deployed/production-capable, PAGE linked/discoverable. The current batch and agent-auth source await PAGE production deployment. A live auth smoke additionally requires an owner-authorized dedicated test account.
+The tag-only `release.yml` is the sole publishing path: ordinary CI has no publish permission, while the release job uses npm trusted publishing with OIDC provenance and publishes only its already-gated tarball. Do not publish, push, deploy, create credentials, run live auth, or change the release/OIDC boundary without explicit owner authorization. Keep these states distinct in docs and reports: source complete, npm package published, PAGE endpoint deployed/production-capable, PAGE linked/discoverable. The current batch and agent-auth source await PAGE production deployment. A live auth smoke additionally requires an owner-authorized dedicated test account.

@@ -4,7 +4,7 @@
   "description": "Official command-line client for Agent Community public data and user-claimed authorization",
   "type": "module",
   "bin": {
-    "agentcommunity": "./dist/cli.js"
+    "agentcommunity": "dist/cli.js"
   },
   "files": [
     "dist/",

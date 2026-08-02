@@ -20,13 +20,20 @@ const articleSchema = z.object({
 }).strict();
 export const docsAnswerSchema = z.object({
   _meta: z.object({ version: z.literal("0.55"), response_type: z.enum(["answer", "capability"]), mode: z.literal("list"), site: z.literal("agentcommunity.org") }).strict(),
+  query_id: z.string().regex(/^ask_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).optional(),
   query: z.string().max(500), answer: z.string().max(1500),
+  site: z.literal("agentcommunity.org").optional(), mode: z.literal("list").optional(),
+  total_results: z.number().int().min(0).max(10).optional(),
   content: z.array(articleSchema).max(10),
   results: z.array(z.object({
     url: z.string().url(), site: z.literal("agentcommunity.org"), name: z.string().max(200),
     description: z.string().max(500), schema_object: articleSchema,
   }).strict()).max(10),
-}).strict();
+}).strict().superRefine((value, context) => {
+  if (value.total_results !== undefined && value.total_results !== value.results.length) {
+    context.addIssue({ code: "custom", message: "total_results_mismatch", path: ["total_results"] });
+  }
+});
 
 export const statsSchema = z.object({ member_count: z.number().int(), note: z.string() }).strict();
 export const memberSchema = z.object({

@@ -57,6 +57,26 @@ describe("the seven read-only commands", () => {
     expect(humanHarness.output().stdout.length).toBeGreaterThan(0);
   });
 
+  test("accepts PAGE's additive NLWeb fields and preserves the JSON payload", async () => {
+    const payload = {
+      query_id: "ask_550e8400-e29b-41d4-a716-446655440000",
+      query: "What is AID?",
+      site: "agentcommunity.org",
+      mode: "list",
+      total_results: 0,
+      answer: "AID is a discovery format.",
+      content: [],
+      results: [],
+      _meta: { mode: "list", response_type: "answer", site: "agentcommunity.org", version: "0.55" },
+    };
+    const requestJson = vi.fn().mockImplementation(async (request) => request.validate(payload));
+    const resultHarness = harness({ http: { requestJson } });
+
+    expect(await runCli(["docs", "ask", "What is AID?", "--json"], resultHarness.dependencies)).toBe(0);
+    expect(JSON.parse(resultHarness.output().stdout)).toEqual(payload);
+    expect(resultHarness.output().stderr).toBe("");
+  });
+
   test("posts the validated batch unchanged, preserves order, and exits 8 for mixed results", async () => {
     const request = { items: [
       { id: "first", operation: "content.list", arguments: {} },
