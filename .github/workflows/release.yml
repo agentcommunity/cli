@@ -64,7 +64,7 @@ jobs:
         id: pack
         run: |
           npm pack --json > pack-result.json
-          tarball="$(node --input-type=module -e 'import { readFileSync } from "node:fs"; const [result] = JSON.parse(readFileSync("pack-result.json", "utf8")); if (!result?.filename) throw new Error("npm pack returned no tarball"); process.stdout.write(result.filename);')"
+          tarball="$(./node_modules/.bin/tsx scripts/resolve-packed-tarball.ts pack-result.json)"
           sha256sum "$tarball"
           printf 'tarball=%s\n' "$tarball" >> "$GITHUB_OUTPUT"
 
