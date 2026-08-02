@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
-import { verifyContractDirectory } from "../contracts.js";
+import { docsAnswerSchema, verifyContractDirectory } from "../contracts.js";
 
 const repositoryRoot = new URL("../../", import.meta.url);
 
@@ -25,5 +25,33 @@ describe("vendored PAGE contracts", () => {
     lock.manifest_url = "https://agentcommunity.org/.well-known/agentcommunity-contracts/1.0.0/../escape.json";
     await writeFile(lockPath, JSON.stringify(lock));
     await expect(verifyContractDirectory(new URL(`file://${temp}/`))).rejects.toMatchObject({ code: "contract_mismatch" });
+  });
+});
+
+describe("NLWeb answer compatibility", () => {
+  const legacyAnswer = {
+    _meta: { version: "0.55", response_type: "answer", mode: "list", site: "agentcommunity.org" },
+    query: "What is AID?",
+    answer: "AID is a discovery format.",
+    content: [],
+    results: [],
+  };
+
+  test("accepts both the deployed envelope and PAGE's additive reference fields", () => {
+    expect(docsAnswerSchema.parse(legacyAnswer)).toEqual(legacyAnswer);
+    const currentAnswer = {
+      ...legacyAnswer,
+      query_id: "ask_550e8400-e29b-41d4-a716-446655440000",
+      site: "agentcommunity.org",
+      mode: "list",
+      total_results: 0,
+    };
+    expect(docsAnswerSchema.parse(currentAnswer)).toEqual(currentAnswer);
+  });
+
+  test("keeps rejecting unrecognized or inconsistent additive fields", () => {
+    expect(docsAnswerSchema.safeParse({ ...legacyAnswer, unexpected: true }).success).toBe(false);
+    expect(docsAnswerSchema.safeParse({ ...legacyAnswer, total_results: 1 }).success).toBe(false);
+    expect(docsAnswerSchema.safeParse({ ...legacyAnswer, query_id: "unbounded-id" }).success).toBe(false);
   });
 });
