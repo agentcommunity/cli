@@ -35,7 +35,7 @@ npm run contracts:check
 npm run package:audit
 ```
 
-The final package audit must inspect the exact tarball allowlist and packed manifest, require `bin.agentcommunity` to remain exactly `dist/cli.js`, scan packed files for likely secrets, install that tarball in a clean temporary project, prove the installed `.bin/agentcommunity` shim resolves to the packed executable, and run that exact shim. CI covers Node 22.14, 24, and 26 on Ubuntu 24.04 and macOS.
+The final package audit must normalize and validate both supported `npm pack --json` contracts (npm 11's one-element array and npm 12's single package-keyed object), inspect the exact tarball allowlist and packed manifest, require `bin.agentcommunity` to remain exactly `dist/cli.js`, scan packed files for likely secrets, install that tarball in a clean temporary project, prove the installed `.bin/agentcommunity` shim resolves to the packed executable, and run that exact shim. CI covers Node 22.14, 24, and 26 on Ubuntu 24.04 and macOS.
 
 ## Security and release gates
 

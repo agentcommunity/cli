@@ -2,9 +2,13 @@ import { spawnSync } from "node:child_process";
 import { chmod, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
+import { normalizeNpmPackResult } from "../../scripts/npm-pack-result.js";
+
 const root = new URL("../../", import.meta.url);
+const rootPath = fileURLToPath(root);
 
 function command(commandName: string, args: Array<string>, cwd: string): string {
   const result = spawnSync(commandName, args, { cwd, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
@@ -24,6 +28,7 @@ describe("package and CI boundaries", () => {
       bugs: { url: "https://github.com/agentcommunity/cli/issues" },
     });
     expect(packageJson.exports).toBeUndefined();
+    expect(packageJson.version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(packageJson.scripts.preinstall).toBeUndefined();
     expect(packageJson.scripts.postinstall).toBeUndefined();
   });
@@ -38,6 +43,7 @@ describe("package and CI boundaries", () => {
       await mkdir(packed);
       await mkdir(project);
       const packageJson = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
+      const packageVersion = packageJson.version as string;
       await writeFile(join(source, "package.json"), `${JSON.stringify(packageJson, null, 2)}\n`);
       for (const file of ["README.md", "LICENSE", "SECURITY.md"]) {
         await writeFile(join(source, file), `${file} fixture\n`);
@@ -46,12 +52,32 @@ describe("package and CI boundaries", () => {
       await writeFile(executable, "#!/usr/bin/env node\nconsole.log('packed-binary-ok');\n");
       await chmod(executable, 0o755);
 
-      const packResult = JSON.parse(command("npm", ["pack", "--json", "--pack-destination", packed], source)) as Array<{ filename: string }>;
-      const filename = packResult[0]?.filename;
-      expect(filename).toBe("agentcommunity-cli-0.1.0.tgz");
-      const tarball = join(packed, basename(filename as string));
-      const packedManifest = JSON.parse(command("tar", ["-xOf", tarball, "package/package.json"], source));
-      expect(packedManifest.bin).toEqual({ agentcommunity: "dist/cli.js" });
+      const packCommands = [
+        { label: "npm 11", commandName: "npm", prefix: [] as Array<string> },
+        { label: "npm 12", commandName: "npx", prefix: ["--yes", "--package", "npm@12.0.2", "npm"] },
+      ];
+      let tarball = "";
+      for (const packCommand of packCommands) {
+        const packDestination = join(packed, packCommand.label.replace(" ", "-"));
+        await mkdir(packDestination);
+        const rawResult = JSON.parse(command(
+          packCommand.commandName,
+          [...packCommand.prefix, "pack", "--json", "--pack-destination", packDestination],
+          source,
+        ));
+        const packResult = normalizeNpmPackResult(rawResult, "@agentcommunity/cli", packageVersion);
+        expect(packResult.filename, packCommand.label).toBe(`agentcommunity-cli-${packageVersion}.tgz`);
+        const packResultPath = join(packDestination, "pack-result.json");
+        await writeFile(packResultPath, JSON.stringify(rawResult));
+        expect(command(
+          join(rootPath, "node_modules/.bin/tsx"),
+          [join(rootPath, "scripts/resolve-packed-tarball.ts"), packResultPath],
+          source,
+        ), packCommand.label).toBe(packResult.filename);
+        tarball = join(packDestination, basename(packResult.filename));
+        const packedManifest = JSON.parse(command("tar", ["-xOf", tarball, "package/package.json"], source));
+        expect(packedManifest.bin, packCommand.label).toEqual({ agentcommunity: "dist/cli.js" });
+      }
 
       await writeFile(join(project, "package.json"), '{"name":"package-boundary-install","private":true,"version":"1.0.0"}\n');
       command("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], project);
@@ -82,6 +108,7 @@ describe("package and CI boundaries", () => {
     expect(release).toContain("id-token: write");
     expect(release).toContain("npm run package:audit");
     expect(release).toContain("npm pack --json");
+    expect(release).toContain('tarball="$(./node_modules/.bin/tsx scripts/resolve-packed-tarball.ts pack-result.json)"');
     expect(release).toContain('npm publish "${{ steps.pack.outputs.tarball }}" --access public --provenance');
     expect(release).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN|npm_[A-Za-z0-9]{20,}/);
   });

@@ -4,8 +4,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { spawnSync } from "node:child_process";
 
-interface PackFile { path: string; size: number }
-interface PackResult { filename: string; files: Array<PackFile> }
+import { normalizeNpmPackResult } from "./npm-pack-result.js";
 
 const expectedFiles = ["LICENSE", "README.md", "SECURITY.md", "dist/cli.js", "package.json"];
 const expectedBin = { agentcommunity: "dist/cli.js" };
@@ -22,6 +21,13 @@ function command(commandName: string, args: Array<string>, cwd: string): string 
   const result = spawnSync(commandName, args, { cwd, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`${commandName} ${args.join(" ")} failed:\n${result.stderr}`);
   return result.stdout;
+}
+
+function npmCommand(args: Array<string>, cwd: string): string {
+  const npmExecPath = process.env.npm_execpath;
+  return npmExecPath === undefined
+    ? command("npm", args, cwd)
+    : command(process.execPath, [npmExecPath, ...args], cwd);
 }
 
 function assertExactBin(packageJson: Record<string, unknown>, source: string): void {
@@ -46,9 +52,8 @@ async function main(): Promise<void> {
   const destination = await mkdtemp(join(tmpdir(), "agentcommunity-pack-"));
   const project = await mkdtemp(join(tmpdir(), "agentcommunity-install-"));
   try {
-    const packed = JSON.parse(command("npm", ["pack", "--json", "--pack-destination", destination], repositoryRoot)) as Array<PackResult>;
-    const result = packed[0];
-    if (result === undefined) throw new Error("npm pack returned no tarball.");
+    const packed = JSON.parse(npmCommand(["pack", "--json", "--pack-destination", destination], repositoryRoot));
+    const result = normalizeNpmPackResult(packed, packageJson.name, packageJson.version);
     const inventory = result.files.map((file) => file.path).sort();
     if (JSON.stringify(inventory) !== JSON.stringify(expectedFiles)) throw new Error(`Unexpected package inventory: ${inventory.join(", ")}`);
     const tarballPath = join(destination, basename(result.filename));
@@ -63,7 +68,7 @@ async function main(): Promise<void> {
       for (const pattern of secretPatterns) if (pattern.test(content)) throw new Error(`Possible secret in packed file ${path}.`);
     }
     await writeFile(join(project, "package.json"), '{"name":"agentcommunity-clean-install","private":true,"version":"1.0.0"}\n');
-    command("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarballPath], project);
+    npmCommand(["install", "--ignore-scripts", "--no-audit", "--no-fund", tarballPath], project);
     const installedPackageRoot = join(project, "node_modules/@agentcommunity/cli");
     const installedManifest = JSON.parse(await readFile(join(installedPackageRoot, "package.json"), "utf8"));
     assertExactBin(installedManifest, "Installed");
