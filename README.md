@@ -2,11 +2,24 @@
 
 `@agentcommunity/cli` is the standalone command-line client for Agent Community's public agent interfaces. It provides seven read-only public-data commands plus user-claimed authorization commands and does not expose a public JavaScript SDK.
 
-The source is complete for macOS and Linux on Node.js `^22.14.0 || ^24.0.0 || ^26.0.0`. The package is not yet published, PAGE has not yet linked it, and the branch-local batch and agent-authorization endpoints must be deployed before those commands are production-capable. Do not treat source completion as npm publication, production availability, or Agent Community discovery linkage.
+The package is published for macOS and Linux on Node.js `^22.14.0 || ^24.0.0 || ^26.0.0`. All seven read-only commands use live Agent Community interfaces. The user-claimed `auth` commands are included but remain unavailable until PAGE's authorization rollout is enabled; they fail closed and do not weaken the public read-only boundary.
 
-## Source checkout usage
+## Install
 
-An npm install command will be added only after the package is actually published. From a source checkout:
+Run without installing globally:
+
+```sh
+npx -y @agentcommunity/cli --help
+```
+
+Or install the command globally:
+
+```sh
+npm install --global @agentcommunity/cli
+agentcommunity --help
+```
+
+From a source checkout:
 
 ```sh
 npm ci
