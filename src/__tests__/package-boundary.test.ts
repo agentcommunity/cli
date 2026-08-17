@@ -1,9 +1,10 @@
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { chmod, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 
 import { normalizeNpmPackResult } from "../../scripts/npm-pack-result.js";
 
@@ -17,6 +18,16 @@ function command(commandName: string, args: Array<string>, cwd: string): string 
 }
 
 describe("package and CI boundaries", () => {
+  it("states official ownership and keeps the CLI distinct from SDK packages", function () {
+    const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+
+    expect(readme).toContain("Official package attribution");
+    expect(readme).toContain("@agentcommunity/cli");
+    expect(readme).toContain("https://github.com/agentcommunity/cli");
+    expect(readme).toContain("https://agentcommunity.org/developers");
+    expect(readme).toContain("does not expose a public JavaScript SDK");
+  });
+
   test("declares a CLI-only package for the maintained Node and OS matrix", async () => {
     const packageJson = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
     expect(packageJson).toMatchObject({
