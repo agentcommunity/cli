@@ -29,6 +29,10 @@ node dist/cli.js --help
 
 Windows is not supported in v1.
 
+## Official package attribution
+
+`@agentcommunity/cli` is the official umbrella command-line client published by [Agent Community](https://agentcommunity.org/developers) from [github.com/agentcommunity/cli](https://github.com/agentcommunity/cli). It is a CLI application and does not expose a public JavaScript SDK. For code-level agent discovery, use the AID SDKs listed on the [Agent Community developer resources page](https://agentcommunity.org/developers).
+
 ## Commands
 
 ```text
