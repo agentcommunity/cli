@@ -8,6 +8,16 @@ import { normalizeNpmPackResult } from "./npm-pack-result.js";
 
 const expectedFiles = ["LICENSE", "README.md", "SECURITY.md", "dist/cli.js", "package.json"];
 const expectedBin = { agentcommunity: "dist/cli.js" };
+const expectedKeywords = [
+  "agentcommunity",
+  "agent-community",
+  "cli",
+  "ai-agents",
+  "mcp",
+  "model-context-protocol",
+];
+const expectedDescription =
+  "Official Agent Community CLI for public MCP, content, NLWeb, batch, and user-claimed authorization interfaces";
 const installedBinRelativePath = "node_modules/.bin/agentcommunity";
 const secretPatterns = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
@@ -40,6 +50,12 @@ async function main(): Promise<void> {
   const repositoryRoot = new URL("../", import.meta.url).pathname;
   const packageJson = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
   assertExactBin(packageJson, "Source");
+  if (packageJson.description !== expectedDescription) {
+    throw new Error("Official CLI description drift detected.");
+  }
+  if (JSON.stringify(packageJson.keywords) !== JSON.stringify(expectedKeywords)) {
+    throw new Error("Official CLI keyword drift detected.");
+  }
   if (packageJson.name !== "@agentcommunity/cli" || packageJson.exports !== undefined) {
     throw new Error("Package metadata is outside the CLI-only boundary.");
   }
@@ -58,6 +74,12 @@ async function main(): Promise<void> {
     if (JSON.stringify(inventory) !== JSON.stringify(expectedFiles)) throw new Error(`Unexpected package inventory: ${inventory.join(", ")}`);
     const tarballPath = join(destination, basename(result.filename));
     const packedManifest = JSON.parse(command("tar", ["-xOf", tarballPath, "package/package.json"], repositoryRoot));
+    if (packedManifest.description !== expectedDescription) {
+      throw new Error("Packed CLI description drift detected.");
+    }
+    if (JSON.stringify(packedManifest.keywords) !== JSON.stringify(expectedKeywords)) {
+      throw new Error("Packed CLI keyword drift detected.");
+    }
     assertExactBin(packedManifest, "Packed tarball");
     const tarball = await readFile(tarballPath);
     const tarballSha256 = createHash("sha256").update(tarball).digest("hex");

@@ -1,7 +1,15 @@
 {
   "name": "@agentcommunity/cli",
-  "version": "0.1.2",
-  "description": "Official command-line client for Agent Community public data and user-claimed authorization",
+  "version": "0.1.3",
+  "description": "Official Agent Community CLI for public MCP, content, NLWeb, batch, and user-claimed authorization interfaces",
+  "keywords": [
+    "agentcommunity",
+    "agent-community",
+    "cli",
+    "ai-agents",
+    "mcp",
+    "model-context-protocol"
+  ],
   "type": "module",
   "bin": {
     "agentcommunity": "dist/cli.js"
